@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Processor Model="Custom-4CPUs-01" CoresNumber="5" DVFSType="VFI">
+    <!--處理器型號、Core數量-->
+    <Core Number="3" Type="nonIdeal">
+        <AvailableSpeed>
+            <Speed>
+                <Frequency>1200</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>70</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>1050</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>60</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>900</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>50</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>750</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>40</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>450</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>20</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>300</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>10</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>150</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>1</ProwerConsumption>
+            </Speed>
+        </AvailableSpeed>
+    </Core>
+    
+    <Core Number="2" Type="nonIdeal">
+        <AvailableSpeed>
+            <Speed>
+                <Frequency>1200</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>70</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>1050</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>60</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>900</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>50</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>750</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>40</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>600</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>30</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>450</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>20</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>300</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>10</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>150</Frequency> <!--頻率(單位：MHz)-->
+                <ProwerConsumption>1</ProwerConsumption>
+            </Speed>
+        </AvailableSpeed>
+    </Core>
+</Processor>

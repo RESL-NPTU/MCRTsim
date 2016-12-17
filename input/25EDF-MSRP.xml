@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workload TaskNumber="5" ResourceNumber="2" Frequency="300">
+    <!--工作數量、資源數量、以下數據所採用之基礎電壓(單位：MHz)-->
+    <Resources ID="1">
+        <ResourceAmount>4</ResourceAmount>
+    </Resources>
+    
+    <Resources ID="2">
+        <ResourceAmount>4</ResourceAmount>
+    </Resources>
+    <Resources ID="3">
+        <ResourceAmount>1</ResourceAmount>
+    </Resources>
+    
+    <Resources ID="4">
+        <ResourceAmount>2</ResourceAmount>
+    </Resources>
+    <Resources ID="5">
+        <ResourceAmount>1</ResourceAmount>
+    </Resources>
+    
+    <Resources ID="6">
+        <ResourceAmount>2</ResourceAmount>
+    </Resources>
+
+   
+    <Task ID="1">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+
+    <Task ID="2">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="3">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>11</EndTime>
+        </CriticalSection>
+        <CriticalSection>
+            <Resource>3</Resource>
+            <StartTime>5</StartTime>
+            <EndTime>9</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="4">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        <CriticalSection>
+            <Resource>4</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>5</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="5">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="6">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="7">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+        <CriticalSection>
+            <Resource>5</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="8">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+        <CriticalSection>
+            <Resource>6</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>11</EndTime>
+        </CriticalSection>
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>5</StartTime>
+            <EndTime>9</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="9">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>5</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="10">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="11">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="12">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+        <CriticalSection>
+            <Resource>3</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="13">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>6</EndTime>
+        </CriticalSection>
+        <CriticalSection>
+            <Resource>6</Resource>
+            <StartTime>3</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="14">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        <CriticalSection>
+            <Resource>5</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>5</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="15">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="16">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="17">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="18">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>8</StartTime>
+            <EndTime>11</EndTime>
+        </CriticalSection>
+        <CriticalSection>
+            <Resource>6</Resource>
+            <StartTime>9</StartTime>
+            <EndTime>10</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="19">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>5</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="20">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="21">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="22">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+    </Task>
+    
+    <Task ID="23">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+    </Task>
+    
+    <Task ID="24">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+    
+    <Task ID="25">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+</Workload>

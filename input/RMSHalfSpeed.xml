@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workload TaskNumber="2" ResourceNumber="0" Frequency="300">
+    <!--工作數量、資源數量、以下數據所採用之基礎電壓(單位：MHz)-->
+    <Task ID="1">
+        <EnterTime>0</EnterTime>
+        <Period>6</Period> <!--工作週期-->
+        <RelativeDeadline>6</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>1.5</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        
+    </Task>
+    <Task ID="2">
+        <EnterTime>0</EnterTime>
+        <Period>12</Period>
+        <RelativeDeadline>12</RelativeDeadline>
+        <ComputationAmount>3</ComputationAmount>
+    </Task>
+    
+</Workload>

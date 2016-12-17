@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workload TaskNumber="5" ResourceNumber="2" Frequency="300">
+    <!--工作數量、資源數量、以下數據所採用之基礎電壓(單位：MHz)-->
+    <Resources ID="1">
+        <ResourceAmount>1</ResourceAmount>
+    </Resources>
+    
+    <Resources ID="2">
+        <ResourceAmount>1</ResourceAmount>
+    </Resources>
+   
+    <Task ID="1">
+        <EnterTime>7</EnterTime>
+        <Period>10</Period> <!--工作週期-->
+        <RelativeDeadline>10</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+
+    <Task ID="2">
+        <EnterTime>3</EnterTime>
+        <Period>20</Period>
+        <RelativeDeadline>20</RelativeDeadline>
+        <ComputationAmount>6</ComputationAmount>
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>4</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="3">
+        <EnterTime>0</EnterTime>
+        <Period>26</Period>
+        <RelativeDeadline>26</RelativeDeadline>
+        <ComputationAmount>13</ComputationAmount>
+        <CriticalSection>
+            <Resource>1</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>11</EndTime>
+        </CriticalSection>
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>5</StartTime>
+            <EndTime>9</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="4">
+        <EnterTime>4</EnterTime>
+        <Period>20</Period> <!--工作週期-->
+        <RelativeDeadline>20</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>7</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+        <CriticalSection>
+            <Resource>2</Resource>
+            <StartTime>2</StartTime>
+            <EndTime>5</EndTime>
+        </CriticalSection>
+    </Task>
+    
+    <Task ID="5">
+        <EnterTime>7</EnterTime>
+        <Period>12</Period> <!--工作週期-->
+        <RelativeDeadline>12</RelativeDeadline> <!--工作截止時間-->
+        <ComputationAmount>2</ComputationAmount> <!--工作運算時間(基於Speed屬性)-->
+    </Task>
+</Workload>

@@ -27,19 +27,24 @@ public class MSRP extends SRP
     
     public boolean leadLock(Job j) 
     {
-        for( Resources resources : j.getCriticalSectionSet().getResourcesSet(j.getTask()))
-        {
-            if(resources.getLeftResourceAmount() == 0 && resources.checkWhoLockedResource(j) == null)
+        if(j.isPreemptionLevelHigher(j.getLocationCore().getSystemPreemptionLevel(j))>0)
+        {  
+            for(Resources resources : j.getCriticalSectionSet().getResourcesSet(j.getTask()))
             {
-                if(resources.isGlobal() == true)
+                if(resources.getLeftResourceAmount() == 0 && resources.checkWhoLockedResource(j) == null)
                 {
-                    return true;
+                    if(resources.isGlobal() == true)
+                    {
+                        return true;
+                    }
+                    resources.blocked(j);
+                    return false;
                 }
-                resources.blocked(j);
-                return false;
             }
-        }
         return true;
+        }
+        j.getLocationCore().getResourceOfSystemPreemptionLevel().blocked(j);
+        return false;
     }
     
     public boolean lock(Job j, Resources r)

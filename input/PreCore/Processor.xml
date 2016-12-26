@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Processor Model="Custom-4CPUs-01" CoresNumber="1" DVFSType="Per-Core">
+    <!--處理器型號、Core數量、動態電壓頻率調整類型-->
+    <Core Number="1" Type="nonIdeal">
+        <AvailableSpeed>
+            <Speed>
+                <Frequency>1200</Frequency><!--頻率(單位：MHz)-->
+                <ProwerConsumption>70</ProwerConsumption>
+                 <!--能量消耗-->
+            </Speed>
+            <Speed>
+                <Frequency>1050</Frequency>
+                <ProwerConsumption>60</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>900</Frequency>
+                <ProwerConsumption>50</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>750</Frequency>
+                <ProwerConsumption>40</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>600</Frequency>
+                <ProwerConsumption>30</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>450</Frequency>
+                <ProwerConsumption>20</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>300</Frequency>
+                <ProwerConsumption>10</ProwerConsumption>
+            </Speed>
+            <Speed>
+                <Frequency>150</Frequency>
+                <ProwerConsumption>1</ProwerConsumption>
+            </Speed>
+        </AvailableSpeed>
+    </Core>
+</Processor>

@@ -8,10 +8,10 @@
                 <MinFrequency>150</MinFrequency> <!--頻率(單位：MHz)-->
             </SpeedRange>
         </AvailableSpeed>
-        <ProwerConsumptionFunction>
+        <PowerConsumptionFunction>
             <Alpha>0.08</Alpha>
             <Beta>1.52</Beta>
             <Gamma>3</Gamma>
-        </ProwerConsumptionFunction>
+        </PowerConsumptionFunction>
     </Core>
 </Processor>

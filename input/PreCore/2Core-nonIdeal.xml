@@ -5,35 +5,35 @@
         <AvailableSpeed>
             <Speed>
                 <Frequency>1200</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>70</ProwerConsumption>
+                <PowerConsumption>70</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>1050</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>60</ProwerConsumption>
+                <PowerConsumption>60</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>900</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>50</ProwerConsumption>
+                <PowerConsumption>50</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>750</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>40</ProwerConsumption>
+                <PowerConsumption>40</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>600</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>30</ProwerConsumption>
+                <PowerConsumption>30</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>450</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>20</ProwerConsumption>
+                <PowerConsumption>20</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>300</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>10</ProwerConsumption>
+                <PowerConsumption>10</PowerConsumption>
             </Speed>
             <Speed>
                 <Frequency>150</Frequency> <!--頻率(單位：MHz)-->
-                <ProwerConsumption>1</ProwerConsumption>
+                <PowerConsumption>1</PowerConsumption>
             </Speed>
         </AvailableSpeed>
     </Core>

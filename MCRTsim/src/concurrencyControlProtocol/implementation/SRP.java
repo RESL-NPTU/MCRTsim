@@ -67,18 +67,23 @@ public class SRP extends ConcurrencyControlProtocol //問題一
         @Override
     public boolean leadLock(Job j) 
     {
-        for(Resources resources : j.getCriticalSectionSet().getResourcesSet(j.getTask()))
-        {
-            if(resources.getLeftResourceAmount() == 0 && resources.checkWhoLockedResource(j) == null)
+        if(j.isPreemptionLevelHigher(j.getLocationCore().getSystemPreemptionLevel(j))>0)
+        {  
+            for(Resources resources : j.getCriticalSectionSet().getResourcesSet(j.getTask()))
             {
-                if(this.isPIP())
+                if(resources.getLeftResourceAmount() == 0 && resources.checkWhoLockedResource(j) == null)
                 {
-                    resources.blocked(j);
+                    if(this.isPIP())
+                    {
+                        resources.blocked(j);
+                    }
+                   return false;
                 }
-                return false;
             }
-        }
         return true;
+        }
+        j.getLocationCore().getResourceOfSystemPreemptionLevel().blocked(j);
+        return false;
     }
     
     public boolean lock(Job j, Resources r)

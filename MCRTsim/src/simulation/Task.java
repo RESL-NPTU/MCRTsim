@@ -25,6 +25,8 @@ public class Task
     private Priority preemptionLevel;
     private Core localCore;
     private Double utilization;
+    private Double blockingTime;
+    
     //private Vector<Job> JobSet;
     
     public Task()
@@ -32,6 +34,7 @@ public class Task
        // this.JobSet = new Vector<>();
         this.priority = new Priority();
         this.preemptionLevel = new Priority();
+        this.blockingTime = -1.0;
     }
     
     public void setEnterTime(int i)
@@ -157,21 +160,6 @@ public class Task
         return j;
     }
     
-//    private void addJobToJobSet(Job j)
-//    {
-//        this.JobSet.add(j);
-//    }
-//    
-//    public void removeJob(Job j)
-//    {
-//        this.JobSet.remove(j);
-//    }
-//    
-//    public Vector<Job> getJobSet()
-//    {
-//        return this.JobSet;
-//    }
-    
     public int isPriorityHigher(Priority p)
     {
         if(this.priority.getValue() > p.getValue())
@@ -213,5 +201,16 @@ public class Task
     {
         this.utilization = (double)this.computationAmount / (double)this.period;
         System.out.println("Task" + this.ID + ": U= " + this.utilization);
+    }
+    
+    
+    public void setBlockingTime(double bt)
+    {
+        this.blockingTime = bt;
+    }
+    
+    public Double getBlockingTime()
+    {
+        return this.blockingTime;
     }
 }

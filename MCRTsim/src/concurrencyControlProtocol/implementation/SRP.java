@@ -14,6 +14,8 @@ import simulation.LockInfo;
 import simulation.Priority;
 import simulation.Resource;
 import simulation.Resources;
+import simulation.Task;
+import simulation.TaskSet;
 
 /**
  *
@@ -21,9 +23,12 @@ import simulation.Resources;
  */
 public class SRP extends ConcurrencyControlProtocol //問題一
 {
+    private DataSetting dataSetting;
+    
     public SRP(DataSetting ds)
     {
         super(ds);
+        this.dataSetting = ds;
         this.setName("Stack Resource Policy");
         this.setPIP(true);
         
@@ -112,6 +117,12 @@ public class SRP extends ConcurrencyControlProtocol //問題一
         j.currentPriorityOfInheritOrRevert();
         j.getLocationCore().restoreSystemTempCeiling();
         System.out.println("unLock: R"+l.getResources().getID());
+    }
+
+    @Override
+    public double getBlockingTime(TaskSet ts,Task t) 
+    {   
+        return 0;
     }
 }
 

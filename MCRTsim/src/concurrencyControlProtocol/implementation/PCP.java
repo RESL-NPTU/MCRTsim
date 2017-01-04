@@ -11,6 +11,8 @@ import simulation.Final;
 import simulation.Job;
 import simulation.LockInfo;
 import simulation.Resources;
+import simulation.Task;
+import simulation.TaskSet;
 
 /**
  *
@@ -83,6 +85,12 @@ public class PCP extends ConcurrencyControlProtocol
         j.currentPriorityOfInheritOrRevert();
         j.getLocationCore().restoreSystemTempCeiling();
         System.out.println("unLock: R"+l.getResources().getID());
+    }
+    
+    @Override
+    public double getBlockingTime(TaskSet ts,Task t) 
+    {
+        return 0;
     }
 }
 

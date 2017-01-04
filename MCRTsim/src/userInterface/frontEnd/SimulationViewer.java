@@ -143,6 +143,7 @@ public class SimulationViewer extends JPanel
                 
                 public void mouseReleased(MouseEvent e)
                 {
+                    
                     try
                     {
                         dr = new DataReader();
@@ -164,6 +165,9 @@ public class SimulationViewer extends JPanel
                         sim.setSchedAlgorithm(getDynamicPrioritySchedulingAlgorithm());
                         sim.setCCProtocol(getConcurrencyControlProtocol());
                         sim.setDVFSMethod(getDynamicVoltageScalingMethod());
+                        sim.setBlockTimeOfTasks();
+                        JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
+                        popupWin.setVisible(true);
                         sim.start();
                     }
                     catch (Exception ex) 
@@ -184,7 +188,6 @@ public class SimulationViewer extends JPanel
             {
                 public void mouseClicked(MouseEvent e)
                 {
-                    //SimulationViewer.this.timeLineBtn.setForeground(Color.red);
                     SimulationViewer.this.parent.getInfoWin().pressDrawButton();
                 }
             }

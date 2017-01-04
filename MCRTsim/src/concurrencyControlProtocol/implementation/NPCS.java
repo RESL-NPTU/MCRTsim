@@ -10,6 +10,8 @@ import simulation.DataSetting;
 import simulation.Job;
 import simulation.LockInfo;
 import simulation.Resources;
+import simulation.Task;
+import simulation.TaskSet;
 
 /**
  *
@@ -43,5 +45,11 @@ public class NPCS extends ConcurrencyControlProtocol
         {
             j.getLocationCore().setPreemptible(true);
         }
+    }
+    
+    @Override
+    public double getBlockingTime(TaskSet ts,Task t) 
+    {
+        return 0;
     }
 }

@@ -14,6 +14,8 @@ import simulation.LockInfo;
 import simulation.Priority;
 import simulation.Resource;
 import simulation.Resources;
+import simulation.Task;
+import simulation.TaskSet;
 
 /**
  *
@@ -61,6 +63,12 @@ public class PIP extends ConcurrencyControlProtocol
         j.currentPriorityOfInheritOrRevert();
         
         System.out.println("unLock: R"+l.getResources().getID());
+    }
+    
+    @Override
+    public double getBlockingTime(TaskSet ts,Task t) 
+    {
+        return 0;
     }
 }
 

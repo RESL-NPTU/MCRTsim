@@ -9,6 +9,8 @@ import simulation.DataSetting;
 import simulation.Job;
 import simulation.LockInfo;
 import simulation.Resources;
+import simulation.Task;
+import simulation.TaskSet;
 
 /**
  *
@@ -61,5 +63,7 @@ public abstract class ConcurrencyControlProtocol
     public abstract boolean lock(Job j, Resources r);
     
     public abstract void unlock(Job j, LockInfo l);
+    
+    public abstract double getBlockingTime(TaskSet ts,Task t);
 }
 

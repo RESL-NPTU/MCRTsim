@@ -39,7 +39,7 @@ public class Simulator {
 
     public void setBlockTimeOfTasks() {
         for (Task t : this.taskSet) {
-            t.setBlockingTime(this.controller.getCCProtocol().getBlockingTime(this.taskSet,t));
+            t.setBlockingTime(this.controller.getCCProtocol().getBlockingTime(t));
         }
     }
 

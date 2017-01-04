@@ -120,8 +120,9 @@ public class SRP extends ConcurrencyControlProtocol //問題一
     }
 
     @Override
-    public double getBlockingTime(Task t) 
+    public double getBlockingTime(TaskSet ts,Task t) 
     {   
+        
         return 0;
     }
 }

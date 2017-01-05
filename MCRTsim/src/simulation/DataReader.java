@@ -265,7 +265,7 @@ public class DataReader
                 case "Frequency":
                     speed.setFrequency(Integer.valueOf(SElement.getText()));
                     break;
-                case "ProwerConsumption":
+                case "PowerConsumption":
                     speed.setPowerConsumption(Double.valueOf(SElement.getText()));
                     break;
                 default:

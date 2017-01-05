@@ -104,6 +104,7 @@ public class SRP extends ConcurrencyControlProtocol //問題一
             if(this.isPIP())
             {
                 j.getLocationCore().getResourceOfSystemPreemptionLevel().blocked(j);
+                
             }
             return false;
         }

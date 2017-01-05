@@ -166,9 +166,11 @@ public class SimulationViewer extends JPanel
                         sim.setCCProtocol(getConcurrencyControlProtocol());
                         sim.setDVFSMethod(getDynamicVoltageScalingMethod());
                         sim.setBlockTimeOfTasks();
-                        JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
-                        popupWin.setVisible(true);
+                        //JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
+                        //popupWin.setVisible(true);
                         sim.start();
+                        JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
+                        
                     }
                     catch (Exception ex) 
                     {

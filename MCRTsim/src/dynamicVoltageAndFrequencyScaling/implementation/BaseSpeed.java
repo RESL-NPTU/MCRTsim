@@ -56,7 +56,7 @@ public class BaseSpeed extends DynamicVoltageAndFrequencyScalingMethod
         return ((double)task.getComputationAmount() + (double)this.B(task)) / (double)task.getPeriod();
     }
     
-    private int B(Task task)
+    private int B(Task task)//PCP Blocking Time
     {
         int maxBlock = 0;
         for(Task t : this.getDynamicVoltageRegulator().getCore(0).getTaskSet())

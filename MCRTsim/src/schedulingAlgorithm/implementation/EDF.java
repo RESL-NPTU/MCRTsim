@@ -18,6 +18,7 @@ public class EDF extends DynamicPrioritySchedulingAlgorithm
     public EDF()
     {
         this.setName("Earliest Deadline First Scheduling Algorithm");
+        this.isGlobalScheduling = false;
     }
     
     @Override

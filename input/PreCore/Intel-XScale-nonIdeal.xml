@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processor model="Intel-XScale" numCores="2" DVFStype="per-core">
+    <core quantity="2" type="nonIdeal">
+        <availableSpeeds>
+            <speed powerConsumption="925">624</speed>
+            <speed powerConsumption="747">520</speed>
+            <speed powerConsumption="570">416</speed>
+            <speed powerConsumption="400">350</speed>
+            <speed powerConsumption="390">312</speed>
+            <speed powerConsumption="279">208</speed>
+            <speed powerConsumption="116">104</speed>
+        </availableSpeeds>
+    </core>
+</processor>
+

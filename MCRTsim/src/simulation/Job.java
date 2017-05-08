@@ -5,8 +5,10 @@
  */
 package simulation;
 
+import java.text.DecimalFormat;
 import java.util.PriorityQueue;
 import java.util.Stack;
+import java.util.Vector;
 
 /**
  *
@@ -22,11 +24,17 @@ public class Job implements Comparable
     private double targetAmount; //目標工作量
     private Priority originalPriority; //最初的優先權值
     private Priority currentPriority; //當前的優先權值
+    private double pendingTime;//待機時間
+    private double responseTime;//回應時間
     public boolean isInherit;
     private PriorityQueue<CriticalSection> lockResource; //尚未Lock之所需資源
     private Core locationCore;
     private Stack<LockInfo> lockedResources; //已Lock之所需資源
     private Priority preemptionLevel;
+    private Vector<Result> resultSet;
+    
+    private int status = 0; // 0未完成; 1完成 ; -1MissDeadline
+    private double timeOfStatus = 0;//改變狀態的當前時間
     
     public Job()
     {
@@ -36,6 +44,7 @@ public class Job implements Comparable
         this.originalPriority = new Priority();
         this.currentPriority = this.originalPriority;
         this.preemptionLevel = new Priority();
+        this.resultSet = new Vector<Result>();
     }
 
     @Override
@@ -52,10 +61,11 @@ public class Job implements Comparable
         }
         else if(this.currentPriority.getValue() == j.currentPriority.getValue())
         {
-            if(this.isInherit)
+            if(this.isInherit )
             {
                 return -1;
             }
+            
             return 1;
         }
         
@@ -95,6 +105,10 @@ public class Job implements Comparable
     public void setAbsoluteDeadline(int d)
     {
         this.absoluteDeadline = d;
+        
+        //設置PendingTime,ResponseTime初始值
+        this.setPendingTime(this.absoluteDeadline - this.releaseTime);
+        this.setResponseTime(this.absoluteDeadline - this.releaseTime);
     }
     
     public int getAbsoluteDeadline()
@@ -216,8 +230,13 @@ public class Job implements Comparable
         return this.lockedResources;
     }
     
-    public void processed(double processedTime)
+    public void processed(double processedTime, double curTime)
     {
+        if(this.progressAmount == 0)
+        {
+            this.setPendingTime(curTime-1 - this.releaseTime);
+        }
+        
         this.progressAmount += processedTime;
     }
     
@@ -276,5 +295,97 @@ public class Job implements Comparable
         {
             return 0;
         }
+    }
+    
+    public void setStatus(int sta , double time)
+    {
+        this.status = sta;
+        
+        switch(sta)
+        {
+            case -1:
+                this.task.addJobMissDeadlineNum();
+                break;
+            case 0:
+                break;
+            case 1:
+                this.task.addJobCompletedNum();
+                break;
+            default:
+        }
+        
+        for(Result result: this.resultSet)
+        {
+            result.setJobCompletedNum(this.task.getJobCompletedNum());
+            result.setJobMissDeadlineNum(this.task.getJobMissDeadlineNum());
+        }
+        
+        this.setTimeOfStatus(time);
+        this.setResponseTime(this.timeOfStatus - this.releaseTime);
+    }
+    
+    public String getStatus()
+    {
+        switch(this.status)
+        {
+            case -1:
+                return " MissDeadline ";
+            case 0:
+                return " Non Completed ";
+            case 1:
+                return " Completed ";
+            default:
+                return " Error!!! ";
+        }
+    }
+    
+    public void setTimeOfStatus(double time)
+    {
+        this.timeOfStatus = time;
+        
+    }
+    
+    public String getTimeOfStatus()
+    {
+        DecimalFormat df = new DecimalFormat("##.00000");
+        
+        if(this.timeOfStatus != 0)
+        {
+            return ""+Double.parseDouble(df.format(this.timeOfStatus/100000));
+        }
+        else
+        {
+            return ""+this.resultSet.get(this.resultSet.size()-1).getEndTime();
+        }
+    }
+    
+    public void setResponseTime(double time)
+    {
+        this.responseTime = time;
+    }
+    
+    public double getResponseTime()
+    {
+        return this.responseTime;
+    }
+    
+    public void setPendingTime(double time)
+    {
+        this.pendingTime = time;
+    }
+    
+    public double getPendingTime()
+    {
+        return this.pendingTime;
+    }
+    
+    public void addResult(Result result)
+    {
+        this.resultSet.add(result);
+    }
+    
+    public Vector<Result> getResultSet()
+    {
+        return this.resultSet;
     }
 }

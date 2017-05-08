@@ -29,7 +29,7 @@ public class FirstFitDecreasing extends TaskToCore
     public FirstFitDecreasing(DataSetting ds)
     {
         super(ds);
-        this.setName("FirstFitDecreasing");
+        this.setName("First-Fit Decreasing");
     }
 
     @Override

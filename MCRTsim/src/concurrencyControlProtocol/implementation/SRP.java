@@ -7,6 +7,7 @@ package concurrencyControlProtocol.implementation;
 
 import concurrencyControlProtocol.ConcurrencyControlProtocol;
 import java.util.Vector;
+import simulation.CriticalSection;
 import simulation.DataSetting;
 import simulation.Final;
 import simulation.Job;
@@ -123,8 +124,27 @@ public class SRP extends ConcurrencyControlProtocol //問題一
     @Override
     public double getBlockingTime(TaskSet ts,Task t) 
     {   
+        int maxBlockingTime = 0;
+        for(Task task : ts)
+        {
+            if(t != task && t.isPreemptionLevelHigher(task.getPreemptionLevel()) > 0)
+            {
+                for(CriticalSection cs : task.getCriticalSectionSet())
+                {
+                    if(cs.getResources().isPreemptionLevelHigher(t.getPreemptionLevel()) >= 0)
+                    {
+                        maxBlockingTime = (int)(cs.getEndTime() - cs.getStartTime()) > maxBlockingTime ? (int)(cs.getEndTime() - cs.getStartTime()) : maxBlockingTime;
+                    }
+                }
+            }
+        }
+        return maxBlockingTime;
+    }
+
+    @Override
+    public void jobCompleted(Job j) 
+    {
         
-        return 0;
     }
 }
 

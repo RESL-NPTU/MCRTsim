@@ -33,7 +33,7 @@ public class Processor
     {
 
         this.isGlobalScheduling = false;
-                                  //  true;
+                                    //true;
         this.dynamicVoltageRegulators = new Vector<DynamicVoltageRegulator>();
         this.cores = new Vector<Core>();
         this.isPerCore = true;
@@ -42,7 +42,6 @@ public class Processor
         this.checkTime = -1;
         this.currentTime = 0;
         this.globalTaskSet = new TaskSet(); 
-      //  this.processorMapping = new ProcessorMapping(this);
     }
     
     public void setProcessorModel(String m)
@@ -85,6 +84,16 @@ public class Processor
     public Vector<Core> getCores()
     {
         return this.cores;
+    }
+    
+    public double getTotalPowerConsumption()
+    {
+        double TPC = 0;
+        for(Core c : this.cores)
+        {
+            TPC += c.getTotalPowerConsumption();
+        }
+        return TPC;
     }
     
     public Core getCore(int i)
@@ -151,11 +160,11 @@ public class Processor
     {
         switch(str)
         {
-            case "Per-Core":
+            case "per-core":
                 this.isPerCore = true;
                 break;
                 
-            case "Full-Chip":
+            case "full-chip":
             case "VFI":
                 this.isPerCore = false;
                 break;
@@ -206,8 +215,7 @@ public class Processor
                     System.out.println("("+j.getTask().getID()+","+j.getID()+")");
                 }
             }
-            this.checkTime = this.currentTime;
-            
+            this.checkTime = this.currentTime;   
         }
         
         if(this.globalScheduler.getSchedulingAlgorithm() instanceof DynamicPrioritySchedulingAlgorithm) //動態優先權分配
@@ -223,6 +231,10 @@ public class Processor
                 }
             }
         }
+        
+        while(this.assignJobToCore()){};
+        
+        
         
         Vector<String> coreWorkStatus = new Vector<String>();
         for(int i = 0; i < this.cores.size(); i++)
@@ -259,20 +271,55 @@ public class Processor
         }
     }
     
-    public void assignJobToCore(Core c)
+    //public void assignJobToCore(Core c)
+    public boolean assignJobToCore()
     {
-        Job localJob = c.getLocalReadyQueue().poll();
-        c.getLocalReadyQueue().add(this.globalReadyQueue.poll());
-        if(localJob != null)
+        if(this.globalReadyQueue.peek() != null)
         {
-            JobQueue newJQ = new JobQueue();
-            newJQ.add(localJob);
-            for(Job j : this.globalReadyQueue)
+            Core c = null;
+            for(Core core : this.cores)
             {
-                newJQ.add(j);
+                if(core.getCoreStatus()== "start")
+                {
+                    c = core;
+                    break;
+                }
             }
-            this.globalReadyQueue = newJQ;
+            
+            for(Core core : this.cores)//找出當前優先權最小的Core
+            {
+                if(core.getLocalReadyQueue().peek() == null)
+                {
+                    c = core;
+                    break;
+                }
+                else if(c.getLocalReadyQueue().peek().compareTo(core.getLocalReadyQueue().peek())==-1)// cc優先權大於Core
+                {
+                    if(core.getCoreStatus()== "start")
+                    {
+                        c = core;
+                    }
+                }
+            }
+        
+            if(c.getLocalReadyQueue().peek() == null || (c.preemptible && this.globalReadyQueue.peek().compareTo(c.getLocalReadyQueue().peek())==-1))
+            {        
+                Job localJob = c.getLocalReadyQueue().poll();
+                c.getLocalReadyQueue().add(this.globalReadyQueue.poll());
+                if(localJob != null)
+                {
+                    JobQueue newJQ = new JobQueue();
+                    newJQ.add(localJob);
+                    for(Job j : this.globalReadyQueue)
+                    {
+                        newJQ.add(j);
+                    }
+                    this.globalReadyQueue = newJQ;
+                    return true;
+                }
+            }
         }
+        return false;
     }
     
     public void partitionScheduling(int processedTime)

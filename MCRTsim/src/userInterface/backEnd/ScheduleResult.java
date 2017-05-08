@@ -5,7 +5,9 @@
  */
 package userInterface.backEnd;
 
+import java.util.Comparator;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import simulation.Core;
@@ -39,15 +41,13 @@ public class ScheduleResult
         this.isMultiCore = this.parent.getCores().size() > 1 ? true : false;
         this.taskTimeLines = new Hashtable<String, TaskTimeLine>();
         this.coreTimeLines = new Hashtable<String, CoreTimeLine>();
-        this.simulationTime = this.parent.parent.getDataSetting().getProcessor().getSimulator().getSimulationTime() / 100000.0;
-        
+        this.simulationTime = this.parent.parent.getDataSetting().getProcessor().getSimulator().getSimulationTime() / 100000.0; 
     }
     
     public void startCoreTimeLineSchedule()
     {
         this.isCoreTimeLine = true;
         DataSetting ds = this.parent.parent.getDataSetting();
-        this.atbSet = new Result[this.parent.getCores().size()][ds.getTaskSet().size()];
         
         for(int i = 0; i < ds.getProcessor().getCores().size() ; i++)
         {
@@ -55,26 +55,23 @@ public class ScheduleResult
            coreTimeLines.put(id , new CoreTimeLine(this, i, id));
         }
 
-        this.atbSet = new Result[ds.getTaskSet().size()][(int)(this.simulationTime * accuracy)+1];
+        this.atbSet = new Result[ds.getProcessor().getCores().size()][(int)(this.simulationTime * accuracy)+1];
 
         for(Core core : this.parent.getCores())
         {
             Vector<Result> record = core.getResult();
 
-            for(Task task : core.getTaskSet())
+            for (int i=0;i<record.size()-1;i++)
             {
-                for (int i=0;i<record.size()-1;i++)
+                for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
                 {
-                    for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
-                    {
-                        this.atbSet[core.getID()-1][j] = record.get(i);
-                    }
+                    this.atbSet[core.getID()-1][j] = record.get(i);
                 }
-                //addfinallyResult---VVVV
-                for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
-                {
-                    this.atbSet[core.getID()-1][j] = record.get(record.size()-1);
-                }
+            }
+            //addfinallyResult---VVVV
+            for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
+            {
+                this.atbSet[core.getID()-1][j] = record.get(record.size()-1);
             }
         }
         
@@ -112,7 +109,6 @@ public class ScheduleResult
     {
         this.isCoreTimeLine = false;
         DataSetting ds = this.parent.parent.getDataSetting();
-        this.atbSet = new Result[this.parent.getCores().size()][ds.getTaskSet().size()];
         
         if(this.isMultiCore)
         {
@@ -124,24 +120,30 @@ public class ScheduleResult
             
             this.atbSet = new Result[ds.getTaskSet().size()][(int)(this.simulationTime * accuracy)+1];
             
+            Result nullResult = new Result();
+            for(Task task : ds.getTaskSet())
+            {
+                for(int j = 0 ; j<(int)(this.simulationTime * accuracy)+1;j++)
+                this.atbSet[task.getID()-1][j] = nullResult;
+            }
+            
             for(Core core : this.parent.getCores())
             {
                 Vector<Result> record = core.getResult();
                 
-                for(Task task : core.getTaskSet())
+                for (int i=0;i<record.size()-1;i++)
                 {
-                    for (int i=0;i<record.size()-1;i++)
+                    for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
                     {
-                        for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
-                        {
-                            this.atbSet[task.getID()-1][j] = record.get(i);
-                        }
+                        if(record.get(i).getJob()!=null)
+                            this.atbSet[record.get(i).getJob().getTask().getID()-1][j] = record.get(i);
                     }
-                    //addfinallyResult---VVVV
-                    for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
-                    {
-                        this.atbSet[task.getID()-1][j] = record.get(record.size()-1);
-                    }
+                }
+                //addfinallyResult---VVVV
+                for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
+                {
+                    if(record.get(record.size()-1).getJob()!=null)
+                        this.atbSet[record.get(record.size()-1).getJob().getTask().getID()-1][j] = record.get(record.size()-1);
                 }
             }
         }
@@ -150,9 +152,11 @@ public class ScheduleResult
             Core core = this.parent.getCore(0);
             Vector<Result> record = core.getResult();
             
-            for(int i = 0;i < core.getTaskSet().size() ; i++)
+            for(int i = 0;i < ds.getTaskSet().size(); i++)
+                   // core.getTaskSet().size() ; i++)
             {
-               String id = String.valueOf(core.getTaskSet(i).getID());
+               String id = String.valueOf(ds.getTaskSet(i).getID());
+                       //core.getTaskSet(i).getID());
                taskTimeLines.put(id , new TaskTimeLine(this, i, id));
             }
             
@@ -199,6 +203,50 @@ public class ScheduleResult
                     ttl.addExecution(new TaskExecution(curResult));
                 }
             }
+        }
+        
+                
+        Vector<TaskTimeLine> TTL = new Vector<TaskTimeLine>();
+        
+        Enumeration<String> keys= this.taskTimeLines.keys();
+        
+        int size = this.taskTimeLines.size();
+        for(int i=0;i<size;i++)//移除空的TaskTimeLine
+        {
+            String key = keys.nextElement();
+            TaskTimeLine task = this.taskTimeLines.get(key);
+            if(task.getExecutionSize()>0)
+            {
+                TTL.add(task);
+            }
+            else 
+            {
+                this.taskTimeLines.remove(key);
+            }
+        }
+        
+        TTL.sort//排序
+        (
+            new Comparator<TaskTimeLine>()
+            {
+                public int compare(TaskTimeLine t1, TaskTimeLine t2)
+                {
+                    if(t1.ID > t2.ID)
+                    {
+                        return 1;
+                    }
+                    else if(t1.ID <= t2.ID)
+                    {
+                        return -1;
+                    }
+                    return 0;
+                }
+            }
+        );
+        
+        for(int i=0;i<TTL.size();i++)//重新TaskTimeLine設置起始座標
+        {
+            TTL.get(i).setPoint(i);
         }
     }
     

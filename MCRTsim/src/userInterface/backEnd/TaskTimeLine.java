@@ -323,5 +323,15 @@ public class TaskTimeLine
         Color newColor = new Color(r_,g_,b_);  
 
         return newColor;  
-    }  
+    }
+    
+    public int getExecutionSize()
+    {
+        return this.executions.size();
+    }
+    
+    public void setPoint(int i)
+    {
+        o = new Point(100, 200 + i * this.parent.getTaskGap());
+    }
 }

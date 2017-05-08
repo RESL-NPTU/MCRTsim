@@ -47,6 +47,11 @@ public class NPCS extends ConcurrencyControlProtocol
         }
     }
     
+    public void jobCompleted(Job j) 
+    {
+        
+    }
+    
     @Override
     public double getBlockingTime(TaskSet ts,Task t) 
     {

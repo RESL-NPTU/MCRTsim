@@ -58,7 +58,7 @@ public class TimeLineResult extends JPanel
             this.setVisible(true);
             ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE); //工作標籤顯示時間
             
-            resourceColor = new Color[]
+            resourceColor = new Color[] //宣告色彩配置
             {
                 Color.getHSBColor((float) 0.1, 1, 1),Color.getHSBColor((float) 0.2, 1, 1),
                 Color.getHSBColor((float) 0.3, 1, 1),Color.getHSBColor((float) 0.45,(float) 0.2, 1),
@@ -252,7 +252,13 @@ public class TimeLineResult extends JPanel
             }
         }
         
-        private void drawCoreTimeLine(Graphics g)
+        public void paint(Graphics g)
+        {
+            this.paintComponent(g);
+        }
+
+        
+        private void drawCoreTimeLine(Graphics g)//繪製出CoreTimeLine
         {
             g.setPaintMode();
             g.setColor(Color.black);
@@ -313,7 +319,7 @@ public class TimeLineResult extends JPanel
             }
         }
         
-        private void drawTaskTimeLine(Graphics g)
+        private void drawTaskTimeLine(Graphics g)//繪製出TaskTimeLine
         {
             g.setPaintMode();
             g.setColor(Color.black);
@@ -376,11 +382,6 @@ public class TimeLineResult extends JPanel
             }
         }
         
-        public void paint(Graphics g)
-        {
-            this.paintComponent(g);
-
-        }
         
         public Double getCurTime()
         {
@@ -392,7 +393,7 @@ public class TimeLineResult extends JPanel
             return this.mouseTimeLineSet;
         }
        
-        public void reSetAttributes()
+        public void reSetAttributes()//重新設置Attributes的欄位
         {
             if (this.mouseTimeLineSet.getItemCount() != 0) 
             {

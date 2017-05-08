@@ -19,20 +19,26 @@ public class TaskSet extends Vector<Task>
     {
         long lcmPeriod = this.getLcmOfPeriodForTaskSet();
         
-        long biggestEnterTime = getBiggestEnterTime();
-        
-        return biggestEnterTime == 0 ? lcmPeriod : 200*100000;
-        
+        if(!checkEnterTime() || lcmPeriod >200*100000)
+        {
+            return 200*100000;
+        }
+        else
+        {
+            return lcmPeriod;
+        }
     }
     
-    private long getBiggestEnterTime()
+    private boolean checkEnterTime()
     {
-        long biggestEnterTime = 0;
         for(Task task : this)
         {
-            biggestEnterTime = biggestEnterTime > task.getEnterTime() ? biggestEnterTime : task.getEnterTime();
+            if(task.getEnterTime()!=0)
+            {
+                return false;
+            }
         }
-        return biggestEnterTime;
+        return true;
     }
     
     private long getLcmOfPeriodForTaskSet() // 取得TaskSet中所有工作的週期之最小公倍數
@@ -96,5 +102,79 @@ public class TaskSet extends Vector<Task>
             }
         }
         return maxBlock;
+    }
+    
+    public int getTotalJobNumber()
+    {
+        int num = 0;
+        num += getTotalJobCompletedNumber()+getTotalJobMissDeadlineNumber();
+        
+        return num;
+    }
+    
+    public int getTotalJobCompletedNumber()
+    {
+        int num = 0;
+        for(Task t : this)
+        {
+            num += t.getJobCompletedNum();
+        }
+        return num;
+    }
+    
+    public int getTotalJobMissDeadlineNumber()
+    {
+        int num = 0;
+        for(Task t : this)
+        {
+            num += t.getJobMissDeadlineNum();
+        }
+        return num;
+    }
+    
+    public double getTotalJobPendingTime()
+    {
+        double time = 0;
+        for(Task t : this)
+        {
+            for(Job j : t.getJobSet())
+            {
+                time += j.getPendingTime();
+            }
+        }
+        return time/100000;
+    }
+    
+    public double getTotalAverageJobPendingTime()
+    {
+        return this.getTotalJobPendingTime() / this.getTotalJobNumber();
+    }
+    
+    public double getTotalJobResponseTime()
+    {
+        double time = 0;
+        for(Task t : this)
+        {
+            for(Job j : t.getJobSet())
+            {
+                time += j.getResponseTime();
+            }
+        }
+        return time/100000;
+    }
+    
+    public double getTotalAverageJobResponseTime()
+    {
+        return this.getTotalJobResponseTime() / this.getTotalJobNumber();
+    }
+    
+    public double getTotalUtilization()
+    {
+        double U = 0;
+        for(Task t : this)
+        {
+            U += t.getUtilization();
+        }
+        return U;
     }
 }

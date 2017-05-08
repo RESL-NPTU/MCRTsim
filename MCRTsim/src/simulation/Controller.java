@@ -68,5 +68,12 @@ public class Controller
         {
             this.concurrencyControlProtocol.unlock(j, j.getLockedResource().pop());
         }
+        
+        this.jobCompleted(j);
+    }
+    
+    public void jobCompleted(Job j)
+    {
+        this.concurrencyControlProtocol.jobCompleted(j);
     }
 }

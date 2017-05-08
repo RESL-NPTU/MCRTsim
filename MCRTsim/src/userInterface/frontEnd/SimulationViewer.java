@@ -7,6 +7,7 @@ package userInterface.frontEnd;
 
 import concurrencyControlProtocol.ConcurrencyControlProtocol;
 import dynamicVoltageAndFrequencyScaling.DynamicVoltageAndFrequencyScalingMethod;
+import workloadgenerator.WorkloadGenerator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FileDialog;
@@ -66,6 +67,8 @@ public class SimulationViewer extends JPanel
     private ButtonGroup simTimeBG;
     private JRadioButton lcmRB, customRB;
     private DataReader dr;
+    private TotalDataPopupWin totalDataPopupWin;
+    private Simulator sim;
     
     public SimulationViewer(UserInterface ui)
     {
@@ -74,12 +77,11 @@ public class SimulationViewer extends JPanel
         this.initialize();
         
         this.dataGeneratorBtn.addMouseListener
-        (
-            new MouseAdapter()
+        (new MouseAdapter()
             {
                 public void mouseClicked(MouseEvent e)
                 {
-                    sourceTextField.setText("Use DataGenerator");
+                    new WorkloadGenerator(SimulationViewer.this);
                 }
             }
         );
@@ -149,11 +151,11 @@ public class SimulationViewer extends JPanel
                         dr = new DataReader();
                         dr.read(sourceTextField.getText());
                         dr.read(processorTextField.getText());
-                        Simulator sim = new Simulator(SimulationViewer.this);
+                        sim = new Simulator(SimulationViewer.this);
                         sim.setSimulationTime(getSimulationTime());
                         sim.loadDataSetting(dr.getDataSetting()); 
                         
-                        if(!dr.getDataSetting().getProcessor().isGlobalScheduling)
+                        if(!getPrioritySchedulingAlgorithm().isGlobalScheduling)
                         {
                             sim.setTaskToCore(getTaskToCoreMethod());
                         }
@@ -162,15 +164,16 @@ public class SimulationViewer extends JPanel
                             sim.setTaskToProcessor();
                         }
                       
-                        sim.setSchedAlgorithm(getDynamicPrioritySchedulingAlgorithm());
+                        sim.setSchedAlgorithm(getPrioritySchedulingAlgorithm());
                         sim.setCCProtocol(getConcurrencyControlProtocol());
-                        sim.setDVFSMethod(getDynamicVoltageScalingMethod());
+                        DynamicVoltageAndFrequencyScalingMethod DVFSmethod = getDynamicVoltageScalingMethod();
+                        DVFSmethod.setDataSetting(dr.getDataSetting());
+                        sim.setDVFSMethod(DVFSmethod);
                         sim.setBlockTimeOfTasks();
-                        //JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
-                        //popupWin.setVisible(true);
+                       
                         sim.start();
-                        JOptionPane.showMessageDialog(SimulationViewer.this, sim.showBlockTimeOfTasks());
                         
+                        totalDataPopupWin = new TotalDataPopupWin(SimulationViewer.this);
                     }
                     catch (Exception ex) 
                     {
@@ -247,7 +250,7 @@ public class SimulationViewer extends JPanel
         dataToolBar.setLayout(new GridBagLayout());
         {
             GridBagConstraints c = new GridBagConstraints();
-            c.weightx = 0.5;
+            c.weightx = 1;
             c.fill = GridBagConstraints.HORIZONTAL;
             c.anchor = GridBagConstraints.WEST;
             c.gridx = 0;
@@ -258,6 +261,7 @@ public class SimulationViewer extends JPanel
             JToolBar toolBar2 = new JToolBar();
             toolBar2.setFloatable(false);
             toolBar2.add(this.readSourceFileBtn);
+            toolBar2.add(this.dataGeneratorBtn);
             toolBar2.add(this.sourceTextField);
             
             dataToolBar.add(toolBar2,c);
@@ -429,7 +433,6 @@ public class SimulationViewer extends JPanel
         popupWin.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         popupWin.setLayout(new BorderLayout());
         popupWin.add(new JLabel("排程中..."),BorderLayout.CENTER);
-        //popupWin.setVisible(true);
     }
     
     public DataReader getDataReader()
@@ -454,7 +457,7 @@ public class SimulationViewer extends JPanel
         return (TaskToCore)Class.forName("taskToCore.implementation." + this.taskComboBox.getSelectedItem().toString()).getConstructor(DataSetting.class).newInstance(dr.getDataSetting());                
     }
     
-    public PriorityDrivenSchedulingAlgorithm getDynamicPrioritySchedulingAlgorithm() throws ClassNotFoundException, InstantiationException, IllegalAccessException
+    public PriorityDrivenSchedulingAlgorithm getPrioritySchedulingAlgorithm() throws ClassNotFoundException, InstantiationException, IllegalAccessException
     {
         return (PriorityDrivenSchedulingAlgorithm)Class.forName("schedulingAlgorithm.implementation." + this.schedulingComboBox.getSelectedItem().toString()).newInstance();                
     }
@@ -484,5 +487,20 @@ public class SimulationViewer extends JPanel
                     ).longValue();
         }
         return 0;
+    }
+    
+    public Simulator getSimulator()
+    {
+        return sim;
+    }
+    
+    public JTextField getSourceTextField()
+    {
+        return this.sourceTextField;
+    }
+    
+    public TotalDataPopupWin getTotalDataPopupWin()
+    {
+        return this.totalDataPopupWin;
     }
 }

@@ -60,11 +60,11 @@ public class DynamicVoltageRegulator extends Vector<Speed>
             {
                 public int compare(Speed s1, Speed s2)
                 {
-                    if(s1.getFrequency() < s2.getFrequency())
+                    if(s1.getSpeed() < s2.getSpeed())
                     {
                         return -1;
                     }
-                    else if(s1.getFrequency() > s2.getFrequency())
+                    else if(s1.getSpeed() > s2.getSpeed())
                     {
                         return 1;
                     }
@@ -124,12 +124,12 @@ public class DynamicVoltageRegulator extends Vector<Speed>
     
     public double getMinFrequencyOfSpeed()
     {
-        return this.get(0).getFrequency();
+        return this.get(0).getSpeed();
     }
     
     public double getMaxFrequencyOfSpeed()
     {
-        return this.get(this.size()-1).getFrequency();
+        return this.get(this.size()-1).getSpeed();
     }
     
     public void setCurrentSpeed(double s)
@@ -159,9 +159,9 @@ public class DynamicVoltageRegulator extends Vector<Speed>
             {
                 for(Speed speed : this)
                 {
-                    if(speed.getFrequency() >= s)
+                    if(speed.getSpeed() >= s)
                     {
-                        this.currentSpeed = speed.getFrequency();
+                        this.currentSpeed = speed.getSpeed();
                         break;
                     }
                 }
@@ -190,7 +190,7 @@ public class DynamicVoltageRegulator extends Vector<Speed>
             {
                 for(Speed s : this)
                 {
-                    if( Double.valueOf(this.currentSpeed).equals(s.getFrequency()) )
+                    if( Double.valueOf(this.currentSpeed).equals(s.getSpeed()) )
                     {
                         return s.getPowerConsumption();
                     }

@@ -15,6 +15,7 @@ import simulation.TaskSet;
 public class PriorityDrivenSchedulingAlgorithm
 {
     private String algorithmName;
+    public boolean isGlobalScheduling = false;
     
     public PriorityDrivenSchedulingAlgorithm()
     {

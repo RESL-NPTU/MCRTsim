@@ -18,7 +18,7 @@ public class DoubleSpeed extends DynamicVoltageAndFrequencyScalingMethod
     
     public DoubleSpeed()
     {
-        this.setName("None");
+        this.setName("DoubleSpeed");
     }
     
     @Override

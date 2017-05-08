@@ -30,13 +30,11 @@ public class Core
     private Job workingJob, prevJob;
     private Vector<Result> resultSet;
     private TaskSet taskSet;
-    private Priority systemPriorityCeiling;
-    private Priority systemPreemptionLevel;
     private Priority systemTempCeiling;
     private Stack<Priority> systemTemp;
     private Stack<Resources> systemTempResources;
     private String status;
-    private boolean preemptible;
+    public boolean preemptible;
     private boolean resourceChange;
     
     public Core()
@@ -54,8 +52,6 @@ public class Core
         this.totalPowerConsumption = 0.0;
         this.preemptible = true;
         this.taskSet = new TaskSet();
-        this.systemPreemptionLevel = Final.Ohm;
-        this.systemPriorityCeiling = Final.Ohm;
         this.systemTempCeiling = Final.Ohm;
         this.systemTemp = new Stack<Priority>();
         this.systemTempResources = new Stack<Resources>();
@@ -72,13 +68,13 @@ public class Core
         {
             if(this.status == "start")
             {
-                if(this.processor.getGlobalReadyQueue().peek() != null)
-                {
-                    if(this.localReadyQueue.peek() == null || (this.preemptible && this.localReadyQueue.peek().compareTo(this.processor.getGlobalReadyQueue().peek())==1))
-                    {
-                        this.processor.assignJobToCore(this);
-                    }
-                }
+//                if(this.processor.getGlobalReadyQueue().peek() != null)
+//                {
+//                    if(this.localReadyQueue.peek() == null || (this.preemptible && this.processor.getGlobalReadyQueue().peek().compareTo(this.localReadyQueue.peek())==-1))
+//                    {
+//                        this.processor.assignJobToCore(this);
+//                    }
+//                }
                 this.workingJob = this.localReadyQueue.peek();
 
                 if(this.workingJob != null)
@@ -207,13 +203,13 @@ public class Core
         {
             this.currentTime += ((int)(Math.ceil(processingTime)));
             this.totalPowerConsumption += processingTime * this.dynamicVoltageRegulator.getPowerConsumption();
-            this.workingJob.processed((processingTime * (this.dynamicVoltageRegulator.getCurrentSpeed() / this.workingJob.getTask().getMaxProcessingSpeed())));
+            this.workingJob.processed((processingTime * (this.dynamicVoltageRegulator.getCurrentSpeed() / this.workingJob.getTask().getMaxProcessingSpeed())),this.currentTime);
         }
         else
         {
             this.currentTime += ((int)(Math.ceil(((this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount()) / (this.dynamicVoltageRegulator.getCurrentSpeed() / this.workingJob.getTask().getMaxProcessingSpeed())))));
             this.totalPowerConsumption += ((this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount()) / (this.dynamicVoltageRegulator.getCurrentSpeed() / this.workingJob.getTask().getMaxProcessingSpeed())) * this.dynamicVoltageRegulator.getPowerConsumption();
-            this.workingJob.processed(this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount());
+            this.workingJob.processed(this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount(),this.currentTime);
         }
     }
     
@@ -314,8 +310,6 @@ public class Core
                 }
             }
             this.checkTime = this.currentTime;
-            
-            
         }
     }
     
@@ -327,11 +321,8 @@ public class Core
 
             if(this.workingJob.getProgressAmount() == this.workingJob.getTargetAmount())//判斷ＪＯＢ是否完成
             {
-//                while(this.workingJob.getLockedResource().size() > 0 && this.workingJob.getLockedResource().peek() != null)
-//                {
-//                    System.out.println("Error!!!!!!!!");
-//                   
-//                }
+                this.workingJob.setStatus(1,this.currentTime);
+                this.controller.jobCompleted(this.workingJob);
                 this.localReadyQueue.remove(this.workingJob);
             }
         }
@@ -341,6 +332,7 @@ public class Core
     {
         boolean isMissDeadline = false;
         JobQueue newJQ = new JobQueue();
+        Vector<Job> jobOfMissDeadline = new Vector<>();
         Job j;
 
         while((j = this.localReadyQueue.poll()) != null)
@@ -348,6 +340,7 @@ public class Core
             if(j.getAbsoluteDeadline() <= this.currentTime) //Job j MissDeadline
             {
                 isMissDeadline = true;
+                jobOfMissDeadline.add(j);
                 if(j.getLocationCore().getResult().size() > 0)
                 {
                     if(!j.getLocationCore().getResult().get(j.getLocationCore().getResult().size() - 1).getStatus().equals(CoreStatus.WRONG))
@@ -356,6 +349,7 @@ public class Core
                         j.getLocationCore().getResult().get(j.getLocationCore().getResult().size() - 1).setTotalPowerConsumption(this.totalPowerConsumption);
                     }
                 }
+                j.setStatus(-1,this.currentTime);
                 j.getLocationCore().getResult().add(new Result((double)this.currentTime / 100000, CoreStatus.WRONG, 0,0, j,this));
                 System.out.println(this.ID + " ," +(double)this.currentTime / 100000 + ":X:" + j.getTask().getID()+ ","+ j.getID()+"!!!");
                 this.controller.unlockControlForMissDeadline(j);
@@ -381,6 +375,7 @@ public class Core
                 if(j.getAbsoluteDeadline() <= this.currentTime) //Job j MissDeadline
                 {
                     isMissDeadline = true;
+                    jobOfMissDeadline.add(j);
                     if(j.getLocationCore().getResult().size() > 0)
                     {
                         if(!j.getLocationCore().getResult().get(j.getLocationCore().getResult().size() - 1).getStatus().equals(CoreStatus.WRONG))
@@ -389,9 +384,9 @@ public class Core
                             j.getLocationCore().getResult().get(j.getLocationCore().getResult().size() - 1).setTotalPowerConsumption(this.totalPowerConsumption);
                         }
                     }
+                    j.setStatus(-1,this.currentTime);
                     j.getLocationCore().getResult().add(new Result((double)this.currentTime / 100000, CoreStatus.WRONG, 0,0, j,j.getLocationCore()));
                     System.out.println(this.ID + " ," +(double)this.currentTime / 100000 + ":X:" + j.getTask().getID() + ","+ j.getID());
-                    
                     this.controller.unlockControlForMissDeadline(j);
                     this.systemTempResources.get(x).getWaitQueue().remove(j);
                     if(j.getLocationCore().getWorkingJob() == j)
@@ -402,6 +397,7 @@ public class Core
                 }
             }
         }
+        
         if(isMissDeadline)
         {
             this.localReadyQueue.jobPriorityOfInheritOrRevert();

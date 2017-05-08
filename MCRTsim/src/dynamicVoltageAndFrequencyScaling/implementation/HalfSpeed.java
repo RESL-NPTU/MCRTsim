@@ -18,7 +18,7 @@ public class HalfSpeed extends DynamicVoltageAndFrequencyScalingMethod
     
     public HalfSpeed()
     {
-        this.setName("None");
+        this.setName("HalfSpeed");
     }
     
     @Override

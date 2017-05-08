@@ -11,24 +11,24 @@ package simulation;
  */
 public class Speed
 {
-    private double frequency;
+    private double speed;
     private double powerConsumption;
     private double normalization;
     
     public Speed()
     {
-        this.frequency = -1;
+        this.speed = -1;
         this.powerConsumption = -1;
     }
     
-    public void setFrequency(double f)
+    public void setSpeed(double f)
     {
-        this.frequency = f;
+        this.speed = f;
     }
     
-    public double getFrequency()
+    public double getSpeed()
     {
-        return this.frequency;
+        return this.speed;
     }
     
     public void setPowerConsumption(Double p)

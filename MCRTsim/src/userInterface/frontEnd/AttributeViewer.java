@@ -7,13 +7,13 @@ package userInterface.frontEnd;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.text.DecimalFormat;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
-import javax.swing.table.DefaultTableCellRenderer;
 import simulation.Result;
 import userInterface.UserInterface;
 import userInterface.backEnd.MouseTimeLine;
@@ -29,8 +29,9 @@ public class AttributeViewer extends JPanel
     private JToolBar toolBar;
     private JTable table;
     
-    private String StartTime = "", EndTime = "", Speed = "",PowerConsumption = "", Status = "", Resource = "",
-                    TaskID = "", JobID = "", CoreID = "";
+    private String StartTime = "", EndTime = "", Speed = "",PowerConsumption = "", CoreStatus = "", LockedResource = "",
+                    TaskID = "", JobID = "", CoreID = "", JobMissDeadlineNum="", JobCompletedNum="", AveragePowerConsumption="",
+                    JobStatus="", pendingTime="",responseTime="";
     private int numAbt;
 
     public AttributeViewer(UserInterface ui)
@@ -45,7 +46,6 @@ public class AttributeViewer extends JPanel
         try
         {
             this.CoreID="" + rd.getCore().getID();
-            //+ "SystemCeiling = " + rd.getSystemCeiling();
         }
         catch (Exception ex)
         {
@@ -54,26 +54,45 @@ public class AttributeViewer extends JPanel
         
         try
         {
-            this.TaskID="" + rd.getJob().getTask().getID();
-            //+ "SystemCeiling = " + rd.getSystemCeiling();
+            this.TaskID="" + rd.getJob().getTask().getID() + " (" + (double)rd.getJob().getTask().getComputationAmount()/100000
+                    + "," + (double)rd.getJob().getTask().getPeriod()/100000+")";
+            this.JobMissDeadlineNum = ""+rd.getJobMissDeadlineNum();
+            this.JobCompletedNum = ""+rd.getJobCompletedNum();
         }
         catch (Exception ex)
         {
             this.TaskID="Null";
+            this.JobMissDeadlineNum = "Null";
+            this.JobCompletedNum = "Null";
         }
         
         try
         {
             this.JobID="" + rd.getJob().getID();
-            //+ "SystemCeiling = " + rd.getSystemCeiling();
+            this.JobStatus=""+rd.getJob().getStatus() + " at " + rd.getJob().getTimeOfStatus() + " (s)";
+            this.responseTime=""+rd.getJob().getResponseTime()/100000;
+            this.pendingTime=""+rd.getJob().getPendingTime()/100000;
         }
         catch (Exception ex)
         {
             this.JobID="Null";
+            this.JobStatus="Null";
+            this.responseTime="Null";
+            this.pendingTime="Null";
         }
-
-        this.StartTime="" + rd.getStartTime();
-        this.EndTime="" + rd.getEndTime();
+        
+        
+        try
+        {
+            this.StartTime="" + rd.getStartTime()+" (s)";
+            this.EndTime="" + rd.getEndTime()+" (s)";
+        }
+        catch (Exception ex)
+        {
+            this.StartTime="Null";
+            this.EndTime="Null";
+        }
+        
         try
         {
             this.Speed="" + rd.getFrequencyOfSpeed() + "_(" + rd.getNormalizationOfSpeed() + ")";
@@ -82,11 +101,20 @@ public class AttributeViewer extends JPanel
         {
             this.Speed="Null";
         }
-        
-        this.PowerConsumption = "" + rd.getTotalPowerConsumption() + " (mW)";
-        
-        this.Status="" + rd.getStatus();
+        DecimalFormat df = new DecimalFormat("##.00000");
+        try
+        {
+            this.PowerConsumption = "" + Double.parseDouble(df.format(rd.getTotalPowerConsumption())) + " (mW)";
 
+            this.AveragePowerConsumption = ""+Double.parseDouble(df.format(rd.getAveragePowerConsumption())) + " (mW/s)";
+            this.CoreStatus="" + rd.getStatus();
+        }
+        catch (Exception ex)
+        {
+            this.PowerConsumption ="Null";
+            this.AveragePowerConsumption ="Null";
+            this.CoreStatus="Null";
+        }
         String str = "";
         if (rd.getLockedResource().size() != 0)
         {
@@ -95,40 +123,48 @@ public class AttributeViewer extends JPanel
                 str = str + 'R' + rd.getLockedResource().get(i).getResources().getID() +
                         "(" + rd.getLockedResource().get(i).getResource().getID() +"/" + 
                         rd.getLockedResource().get(i).getResources().getResourcesAmount() +")" + "<br>";
-                        //+ "(" + (-rd.getLockedResource().get(i).getPriority().getValue()) + "," + (-rd.getPriorityCeiling(i)) + "," + (-rd.getPreemptibleCeiling(i)) + ")" + "<br>";
             }
         }
         else
         {
             str = "Null";
         }
-        //this.table.setRowHeight(5, 30+30*(rd.getLockedResource().size()-1));
-        this.Resource="<html>" + str + "<html>";
+        this.LockedResource="<html>" + str + "<html>";
         
-        table.getModel().setValueAt(this.CoreID,0,1);
-        table.getModel().setValueAt(this.TaskID,1,1);
-        table.getModel().setValueAt(this.JobID,2,1);
-        table.getModel().setValueAt(this.StartTime,3,1);
-        table.getModel().setValueAt(this.EndTime,4,1);
+        table.getModel().setValueAt(this.StartTime,0,1);
+        table.getModel().setValueAt(this.EndTime,1,1);
+        
+        table.getModel().setValueAt(this.CoreID,3,1);
+        table.getModel().setValueAt(this.CoreStatus,4,1);
         table.getModel().setValueAt(this.Speed,5,1);
         table.getModel().setValueAt(this.PowerConsumption,6,1);
-        table.getModel().setValueAt(this.Status,7,1);
-        table.getModel().setValueAt(this.Resource,8,1);
+        table.getModel().setValueAt(this.AveragePowerConsumption,7,1);
+        
+        table.getModel().setValueAt(this.TaskID,9,1);
+        table.getModel().setValueAt(this.JobCompletedNum,10,1);
+        table.getModel().setValueAt(this.JobMissDeadlineNum,11,1);
+        
+        table.getModel().setValueAt(this.JobID,13,1);
+        table.getModel().setValueAt(this.pendingTime,14,1);
+        table.getModel().setValueAt(this.responseTime,15,1);
+        table.getModel().setValueAt(this.JobStatus,16,1);
+        table.getModel().setValueAt(this.LockedResource,17,1);
     }
 
     private void init()
     {
         this.setLayout(new BorderLayout());
         toolBar = new JToolBar();
-        //timeLineSet = new JComboBox<Double>();
         timeLineSet = new JComboBox<MouseTimeLine>();
 
         toolBar.add(new JLabel("Time:"));
         toolBar.add(timeLineSet);
         this.add(toolBar, BorderLayout.NORTH);
 
-        String[] str = {"CoreID:", "TaskID:", "JobID", "StartTime:", "EndTime:", "Speed:","PowerConsumption:",
-                        "Status:", "Resource:"};
+        
+        String[] str = {"StartTime:", "EndTime:", "", "CoreID:", "CoreStatus:", "Speed:","PowerConsumption:", "AveragePowerConsumption:",
+                    "", "TaskID(C,P):", "JobCompletedNum:","JobMissDeadlineNum:", "", "JobID:" ,"PendingTime:","ResponseTime:",
+                    "JobStatus:", "LockedResource:"};
         
         table = new JTable(str.length, 2)
         {
@@ -140,22 +176,21 @@ public class AttributeViewer extends JPanel
 
         table.setBackground(Color.white);
         table.setTableHeader(null);
-        table.getColumnModel().getColumn(0).setMinWidth(115);
-        table.getColumnModel().getColumn(0).setMaxWidth(115);
+        table.getColumnModel().getColumn(0).setMinWidth(170);
+        table.getColumnModel().getColumn(0).setMaxWidth(170);
         table.getColumnModel().getColumn(1).setMinWidth(90);
         table.setRowHeight(30);
         table.setGridColor(Color.BLACK);
 
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setHorizontalAlignment(JLabel.RIGHT);
-        renderer.setBackground(Color.LIGHT_GRAY);
-        table.getColumnModel().getColumn(0).setCellRenderer(renderer);
-        
         for (numAbt = 0; numAbt < str.length; numAbt++)
         {
             table.getModel().setValueAt(str[numAbt], numAbt, 0);
         }
         
+        MyCellRenderer renderer = new MyCellRenderer();
+        renderer.setHorizontalAlignment(JLabel.RIGHT);
+        table.setDefaultRenderer(Object.class, renderer);
+
         table.setRowHeight(str.length-1, 100);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
@@ -166,18 +201,46 @@ public class AttributeViewer extends JPanel
         this.add(scrollPane, BorderLayout.CENTER);
     }
 
-    //public JComboBox<Double> getTimeLineSet()
     public JComboBox<MouseTimeLine> getTimeLineSet()
     {
         return this.timeLineSet;
     }
     
-    //public void setTimeLineSet(JComboBox<Double> jb)
     public void setTimeLineSet(JComboBox<MouseTimeLine> jb)
     {
         this.toolBar.remove(this.timeLineSet);
         this.timeLineSet = jb;
         this.toolBar.add(timeLineSet);
         this.toolBar.repaint();
+    }
+    
+    public class MyCellRenderer extends javax.swing.table.DefaultTableCellRenderer 
+    {
+        
+        public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, java.lang.Object value, boolean isSelected, boolean hasFocus, int row, int column) 
+        {
+            final java.awt.Component cellComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, 0, column);
+
+            Object val = table.getValueAt(row, 0);
+            String sval = val.toString();
+            sval = sval.replaceAll(":", "");
+            if (sval == "") 
+            {   
+                cellComponent.setBackground(Color.white);
+                cellComponent.setForeground(Color.black);
+            } 
+            else 
+            {
+                cellComponent.setBackground(new Color(230, 230, 230));
+                cellComponent.setForeground(Color.black);
+            }
+            
+            if (isSelected) 
+            {
+                cellComponent.setForeground(table.getSelectionForeground());
+                cellComponent.setBackground(table.getSelectionBackground());
+            }
+            return cellComponent;
+        }
     }
 }

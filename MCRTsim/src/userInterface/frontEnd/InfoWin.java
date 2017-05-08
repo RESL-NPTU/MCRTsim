@@ -37,7 +37,7 @@ public class InfoWin extends JPanel
     public UserInterface parent;
     private JLabel message,timeMessage;
     private JTabbedPane tabbedPane = new JTabbedPane();
-    private JButton leftWinBtn,rightWinBtn ,btnZoomIn, btnZoomOut, timeLineBtn;
+    private JButton leftWinBtn,rightWinBtn ,btnZoomIn, btnZoomOut, timeLineBtn, totalDataWinBtn;
     private DataSetting ds;
     private ResultViewer curResultViewer;
     
@@ -47,6 +47,18 @@ public class InfoWin extends JPanel
         this.parent = ui;
         this.setLayout(new BorderLayout()); 
         this.initialize();
+        
+        this.totalDataWinBtn.addMouseListener
+        (
+            new MouseAdapter()
+            {
+                public void mouseClicked(MouseEvent e)
+                {
+                    if(InfoWin.this.parent.getSimulationViewer().getTotalDataPopupWin() != null)
+                        InfoWin.this.parent.getSimulationViewer().getTotalDataPopupWin().changeVisible();
+                }
+            }
+        );
         
         this.timeLineBtn.addMouseListener
         (
@@ -174,12 +186,13 @@ public class InfoWin extends JPanel
         JPanel nPanel = new JPanel();
         this.add(nPanel, BorderLayout.NORTH);
         nPanel.setLayout(new BorderLayout(0, 0));
-        this.leftWinBtn = new JButton("leftWin");
-        this.rightWinBtn = new JButton("rightWin");
+        this.leftWinBtn = new JButton("|<");
+        this.rightWinBtn = new JButton(">|");
         this.btnZoomIn = new JButton("Zoom In"); 
         this.btnZoomOut= new JButton("Zoom Out");
         this.timeLineBtn= new JButton("Time Line");
         this.timeLineBtn.setForeground(Color.red);
+        this.totalDataWinBtn = new JButton("TotalDataWin");
         
         JToolBar WJTB = new JToolBar();
         JToolBar EJTB = new JToolBar();
@@ -194,29 +207,23 @@ public class InfoWin extends JPanel
         CJTB.add(this.btnZoomOut);
         CJTB.add(this.btnZoomIn);
         CJTB.add(this.timeLineBtn);
+        CJTB.add(this.totalDataWinBtn);
         nPanel.add(WJTB,BorderLayout.WEST);
         nPanel.add(EJTB,BorderLayout.EAST);
         nPanel.add(CJTB,BorderLayout.CENTER);
         this.add(nPanel,BorderLayout.NORTH);
         
-        
-        
-        
-        JPanel sPanel = new JPanel();
-        this.add(sPanel, BorderLayout.SOUTH);
-        sPanel.setLayout(new BorderLayout(0, 0));
+        JPanel Panel = new JPanel();
+        this.add(Panel, BorderLayout.SOUTH);
+        Panel.setLayout(new BorderLayout(0, 0));
 
         message = new JLabel("Message Here");
         message.setHorizontalAlignment(SwingConstants.CENTER);
-        sPanel.add(message, BorderLayout.WEST);
+        Panel.add(message, BorderLayout.WEST);
         timeMessage = new JLabel("Message Here");
         timeMessage.setHorizontalAlignment(SwingConstants.CENTER);
-        sPanel.add(timeMessage, BorderLayout.CENTER);
+        Panel.add(timeMessage, BorderLayout.CENTER);
         this.add(this.tabbedPane, BorderLayout.CENTER);
-        
-        
-        
-        
     }
 
     public void pressDrawButton()

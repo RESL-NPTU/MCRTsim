@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processor model="SimMCP-1" numCores="6" DVFStype="per-core">
+    <core quantity="2" type="Ideal">
+        <availableSpeeds>
+            <speed>800</speed>
+            <speed>100</speed>
+            <speed>idle</speed>
+        </availableSpeeds>
+        <powerConsumptionFunction alpha="0.08" beta="1.52" gamma="3"/>
+    </core>
+    <core quantity="2" type="nonIdeal">
+        <availableSpeeds>
+            <speed>800</speed>
+            <speed>600</speed>
+            <speed>400</speed>
+            <speed>200</speed>
+            <speed>100</speed>
+            <speed>idle</speed>
+        </availableSpeeds>
+        <powerConsumptionFunction alpha="0.08" beta="1.52" gamma="3"/>
+    </core>
+    <core quantity="2" type="nonIdeal">
+        <availableSpeeds>
+            <speed powerConsumption="925">624</speed>
+            <speed powerConsumption="747">520</speed>
+            <speed powerConsumption="570">416</speed>
+            <speed powerConsumption="390">312</speed>
+            <speed powerConsumption="279">208</speed>
+            <speed powerConsumption="116">104</speed>
+            <speed powerConsumption="15.4">idle</speed>
+        </availableSpeeds>
+    </core>
+</processor>
+

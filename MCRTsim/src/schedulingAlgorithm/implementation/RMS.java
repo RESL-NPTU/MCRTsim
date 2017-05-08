@@ -20,6 +20,7 @@ public class RMS extends FixedPrioritySchedulingAlgorithm
     public RMS()
     {
         this.setName("Rate Monotonic Scheduling Algorithm");
+        this.isGlobalScheduling = false;
     }
 
     @Override
@@ -63,6 +64,5 @@ public class RMS extends FixedPrioritySchedulingAlgorithm
             }
             System.out.println(ts.indexOf(temp.get(i)));
         }
-
     }
 }

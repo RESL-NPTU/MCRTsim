@@ -17,8 +17,8 @@ import java.util.ArrayList;
  */
 public class CoreTimeLine
 {
-    int resourceHeight=13;
-    int taskHeight = 80;
+    int resourceHeight=13;//resource圖形高度
+    int taskHeight = 80;//task圖形高度
     int ID;
     Point o; //時間軸起始位置
     ScheduleResult parent;
@@ -57,7 +57,7 @@ public class CoreTimeLine
         executions.add(te);
     }
     
-    public void drawItself(Graphics g)
+    public void drawItself(Graphics g)//繪製結果
     {
         int baseunit = this.parent.getBaseunit();
         double finalTime = this.parent.getFinalTime();
@@ -115,7 +115,7 @@ public class CoreTimeLine
             }
         }
 
-        for(TaskExecution te : executions)
+        for(TaskExecution te : executions)//繪製executions
         {
             if(te.getStatus().equals("W"))
             {
@@ -247,7 +247,7 @@ public class CoreTimeLine
                     }
                     else if((int)((te.getExecutionTime() * baseunit) / 8) > 1)
                     {
-                            g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
+                        g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
                     }
                     g.setColor(Color.BLACK);
                 }

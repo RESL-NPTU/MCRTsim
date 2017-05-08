@@ -6,6 +6,7 @@
 package concurrencyControlProtocol.implementation;
 
 import concurrencyControlProtocol.ConcurrencyControlProtocol;
+import simulation.CriticalSection;
 import simulation.DataSetting;
 import simulation.Final;
 import simulation.Job;
@@ -33,9 +34,12 @@ public class PCP extends ConcurrencyControlProtocol
             this.getDataSetting().getResourceSet().getResources(i).setPriorityCeiling(Final.Ohm);
             for(int j = 0; j < this.getDataSetting().getResourceSet().getResources(i).getAccessSet().size(); j++)
             {
-                if(this.getDataSetting().getResourceSet().getResources(i).getAccessSet().getTask(j).isPriorityHigher(this.getDataSetting().getResourceSet().getResources(i).getPriorityCeiling()) > 0)
+                Task task = this.getDataSetting().getResourceSet().getResources(i).getAccessSet().getTask(j);
+                Resources resources = this.getDataSetting().getResourceSet().getResources(i);
+                
+                if(task.isPriorityHigher(resources.getPriorityCeiling()) > 0)
                 {
-                    this.getDataSetting().getResourceSet().getResources(i).setPriorityCeiling(this.getDataSetting().getResourceSet().getResources(i).getAccessSet().getTask(j).getPriority());
+                    resources.setPriorityCeiling(task.getPriority());
                 }
             }
         }
@@ -51,28 +55,21 @@ public class PCP extends ConcurrencyControlProtocol
     {
         if(r.getLeftResourceAmount() != 0) //檢查使用所有資源是否已被Lock：通過
         {
-            if(j.isPriorityHigher(j.getLocationCore().getSystemPriorityCeiling(j)) > 0) //檢查與系統Ceiling：通過
+            if(j.isPriorityHigher(j.getLocationCore().getSystemPriorityCeiling(j)) > 0) //檢查與System Ceiling：通過
             {
                 j.getLocationCore().setSystemPriorityCeiling(r);
                 j.lock(r);
                 return true;
             }
-            else //檢查與系統Ceiling：阻擋
+            else //檢查與System Ceiling：阻擋
             {
-                if(this.isPIP())
-                {
-                    j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
-                }
+                j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
                 return false;
             }
         }
-        else //檢查使用資源是否已被Lock：阻擋(在同資源不可搶先得情況下，不必要)
+        else //檢查使用資源是否已被Lock：阻擋
         {
-            //is R
-            if(this.isPIP())
-            {
-                j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
-            }
+            j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
             return false;
         }
     }
@@ -80,17 +77,41 @@ public class PCP extends ConcurrencyControlProtocol
     @Override
     public void unlock(Job j, LockInfo l)
     {
-        j.unLock(l.getResources());
-        l.getResources().releaseWaitQueueAllJob();
-        j.currentPriorityOfInheritOrRevert();
-        j.getLocationCore().restoreSystemTempCeiling();
-        System.out.println("unLock: R"+l.getResources().getID());
+        j.unLock(l.getResources());//解鎖Resource
+        l.getResources().releaseWaitQueueAllJob();//釋放被阻擋的Job
+        j.currentPriorityOfInheritOrRevert();//還原Job的Priority
+        j.getLocationCore().restoreSystemTempCeiling();//釋放因鎖定Resource所造成的System Ceiling
+    }
+    
+    public void jobCompleted(Job j) 
+    {
+        
     }
     
     @Override
     public double getBlockingTime(TaskSet ts,Task t) 
     {
-        return 0;
+        double maxBlock = 0;
+        double block=0;
+        
+        for(int a = 0 ; a < ts.size();a++)
+        {
+            if(ts.getTask(a).isPriorityHigher(t.getPriority())<0)
+            {
+                for(CriticalSection cs : ts.getTask(a).getCriticalSectionSet())
+                {
+                    if(cs.getResources().isPriorityHigher(t.getPriority()) >= 0)
+                    {  
+                        block= cs.getEndTime() - cs.getStartTime();
+                        if(block>maxBlock)
+                        {
+                            maxBlock= block;
+                        }
+                    }
+                }
+            }
+        }       
+        return maxBlock;
     }
 }
 

@@ -13,6 +13,7 @@ import java.util.Vector;
  */
 public class Task
 {
+    
     private int ID; // 代碼
     private int numJob = 0; // number of jobs that have been created
     private int period; // 週期
@@ -26,15 +27,19 @@ public class Task
     private Core localCore;
     private Double utilization;
     private Double blockingTime;
+    private Job curJob;
+    private int jobMissDeadlineNum = 0;
+    private int jobCompletedNum = 0;
     
-    //private Vector<Job> JobSet;
+    private Vector<Job> JobSet;
     
     public Task()
     {
-       // this.JobSet = new Vector<>();
+        this.JobSet = new Vector<>();
         this.priority = new Priority();
         this.preemptionLevel = new Priority();
         this.blockingTime = -1.0;
+        this.curJob = new Job();
     }
     
     public void setEnterTime(int i)
@@ -146,6 +151,7 @@ public class Task
     {
         this.numJob++;
         Job j = new Job();
+        this.curJob = j;
         j.setTask(this);
         j.setReleaseTime(newJobTime);
         j.setID(this.numJob);
@@ -156,7 +162,7 @@ public class Task
         j.setLocationCore(this.localCore);
         j.setCriticalSectionSet();
         j.setPreemptionLevel(this.preemptionLevel);
-        //this.addJobToJobSet(j);
+        this.JobSet.add(j);
         return j;
     }
     
@@ -213,4 +219,35 @@ public class Task
     {
         return this.blockingTime;
     }
+
+    public Job getCurJob() 
+    {
+        return this.curJob;
+    }
+    
+    public void addJobMissDeadlineNum()
+    {
+        this.jobMissDeadlineNum++;
+    }
+    
+    public int getJobMissDeadlineNum()
+    {
+        return this.jobMissDeadlineNum;
+    }
+    
+    public void addJobCompletedNum()
+    {
+        this.jobCompletedNum++;
+    }
+    
+    public int getJobCompletedNum()
+    {
+        return this.jobCompletedNum;
+    }
+    
+    public Vector<Job> getJobSet()
+    {
+        return this.JobSet;
+    }
+    
 }

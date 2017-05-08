@@ -52,7 +52,7 @@ public class Simulator
         String s = "Worst Case Blocking Time :";
         for (Task t : this.taskSet) 
         {
-            s = s + "\n    Task " + t.getID() + " = " + t.getBlockingTime();
+            s = s + "\n    Task " + t.getID() + " = " + t.getBlockingTime()/100000;
         }
         return s;
     }
@@ -121,6 +121,7 @@ public class Simulator
 
     public void setSchedAlgorithm(PriorityDrivenSchedulingAlgorithm algorithm) 
     {
+        this.processor.isGlobalScheduling = algorithm.isGlobalScheduling;
         if (!this.processor.isGlobalScheduling) 
         {
             for (Core core : this.processor.getCores()) 

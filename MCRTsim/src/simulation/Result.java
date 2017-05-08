@@ -25,10 +25,13 @@ public class Result
     private Vector<Integer> priorityCeiling;
     private Vector<Integer> preemptibleCeiling;
     private int systemCeiling;
-    
+    private int jobMissDeadlineNum;
+    private int jobCompletedNum;
     
     public Result()
     {   
+        this.jobMissDeadlineNum = 0;
+        this.jobCompletedNum = 0;
         this.core = null;
         this.startTime = 0;
         this.endTime = 0;
@@ -55,8 +58,14 @@ public class Result
         this.lockedResource = new Stack<>();
         this.priorityCeiling = new Vector<>();
         this.preemptibleCeiling = new Vector<>();
-        //this.powerConsumption = c.getPowerConsumption();
-                
+        
+        if(j!=null)
+        {
+            this.jobMissDeadlineNum = j.getTask().getJobMissDeadlineNum();
+            this.jobCompletedNum = j.getTask().getJobCompletedNum();
+            j.addResult(this);
+        }
+        
         if(s.equals(CoreStatus.EXECUTION))
         {
             this.lockedResource.addAll(j.getLockedResource());
@@ -135,5 +144,30 @@ public class Result
     public double getTotalPowerConsumption()
     {
         return this.totalPowerConsumption / 100000;
+    }
+    
+    public double getAveragePowerConsumption()
+    {
+        return this.getTotalPowerConsumption() / this.endTime;
+    }
+    
+    public int getJobMissDeadlineNum()
+    {
+        return this.jobMissDeadlineNum;
+    }
+    
+    public int getJobCompletedNum()
+    {
+        return this.jobCompletedNum;
+    }
+    
+    public void setJobMissDeadlineNum(int num)
+    {
+        this.jobMissDeadlineNum = num;
+    }
+    
+    public void setJobCompletedNum(int num)
+    {
+        this.jobCompletedNum = num;
     }
 }

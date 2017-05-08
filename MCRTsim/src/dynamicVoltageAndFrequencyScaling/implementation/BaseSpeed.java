@@ -6,9 +6,9 @@
 package dynamicVoltageAndFrequencyScaling.implementation;
 
 import dynamicVoltageAndFrequencyScaling.DynamicVoltageAndFrequencyScalingMethod;
-import simulation.CriticalSection;
-import simulation.Speed;
 import simulation.Task;
+import java.math.BigDecimal;
+import simulation.CriticalSection;
 
 /**
  *
@@ -16,23 +16,28 @@ import simulation.Task;
  */
 public class BaseSpeed extends DynamicVoltageAndFrequencyScalingMethod
 {
-    Double basicSpeed, higherSpeed;
+    Double baseSpeed;
     public BaseSpeed()
     {
-        this.setName("BaseSpeed");
+        this.setName("Base speed");
     }
     
     @Override
     public void definedSpeed()
     {
-        double u = 0;
+        BigDecimal u = new BigDecimal("0");
         for(Task t : this.getDynamicVoltageRegulator().getCore(0).getTaskSet())
         {
-            u += this.U(t);
+            BigDecimal C = new BigDecimal(Integer.toString(t.getComputationAmount()));
+            BigDecimal B = new BigDecimal(Double.toString(((double)B(t))));
+            BigDecimal T = new BigDecimal(Integer.toString(t.getPeriod()));
+            u = u.add((C.add(B)).divide(T,10,/*BigDecimal.ROUND_HALF_UP*/BigDecimal.ROUND_UP));
+            System.out.println("C="+C+", B="+B+", T="+T+", U="+ u);
         }
-        this.basicSpeed = u * this.getDynamicVoltageRegulator().getCore(0).getTaskSet(0).getMaxProcessingSpeed();
-        this.higherSpeed = this.getDynamicVoltageRegulator().getMaxFrequencyOfSpeed();
-        int i = 0;
+        BigDecimal ms = new BigDecimal(Double.toString(this.getDynamicVoltageRegulator().getCore(0).getTaskSet(0).getMaxProcessingSpeed()));
+        this.baseSpeed = (u.multiply(ms)).doubleValue();
+        
+        System.out.println("MS="+ms+", U="+u);
     }
     
     @Override
@@ -40,21 +45,10 @@ public class BaseSpeed extends DynamicVoltageAndFrequencyScalingMethod
     {
         if(this.getDynamicVoltageRegulator().getCore(0).getWorkingJob()!= null)
         {
-            if(this.getDynamicVoltageRegulator().getCore(0).getWorkingJob().getLockedResource().size() > 0)
-            {
-                this.getDynamicVoltageRegulator().setCurrentSpeed(this.higherSpeed);
-            }
-            else
-            {
-                this.getDynamicVoltageRegulator().setCurrentSpeed(this.basicSpeed);
-            }
+            this.getDynamicVoltageRegulator().setCurrentSpeed(this.baseSpeed);
         }
     }
     
-    private double U(Task task)
-    {
-        return ((double)task.getComputationAmount() + (double)this.B(task)) / (double)task.getPeriod();
-    }
     
     private int B(Task task)//PCP Blocking Time
     {
@@ -67,7 +61,7 @@ public class BaseSpeed extends DynamicVoltageAndFrequencyScalingMethod
                 {
                     if(cs.getResources().isPriorityHigher(task.getPriority()) >= 0)
                     {
-                        maxBlock = (int)(cs.getEndTime() - cs.getStartTime());
+                        maxBlock = (int)(cs.getEndTime() - cs.getStartTime()) > maxBlock ? (int)(cs.getEndTime() - cs.getStartTime()) : maxBlock;
                     }
                 }
             }

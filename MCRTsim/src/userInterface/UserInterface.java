@@ -42,24 +42,23 @@ public class UserInterface
         
         splitPane = new JSplitPane();
         this.frame.getContentPane().add(splitPane);
-        splitPane.setOrientation(1);
-        splitPane.setContinuousLayout(false);
+        splitPane.setOrientation(1); //左右 切割方法
+        splitPane.setContinuousLayout(false);//??
         simView = new SimulationViewer(this);
         splitPane.setTopComponent(simView);
         splitPane.setDividerLocation(splitPane.getMinimumDividerLocation());
         
         result = new InfoWin(this);
         bottomSplitPane = new JSplitPane();
-        bottomSplitPane.setOrientation(1);
+        bottomSplitPane.setOrientation(1);//左右 切割方法
         bottomSplitPane.setContinuousLayout(false);
-       
-        
+
         splitPane.setBottomComponent(bottomSplitPane);
         bottomSplitPane.setTopComponent(result);
         
         atb=new AttributeViewer(this);
         bottomSplitPane.setBottomComponent(atb);      
-        System.out.println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
+        //System.out.println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
         bottomSplitPane.setDividerLocation(450);
     }
     
@@ -116,7 +115,7 @@ public class UserInterface
         else
         {
             System.out.println("2");
-            this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth()-200);
+            this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth()-300);
         }
         //System.out.println(""+this.bottomSplitpane.getDividerLocation() + ","+this.frame.getWidth());
     }

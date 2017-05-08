@@ -64,6 +64,8 @@ public abstract class ConcurrencyControlProtocol
     
     public abstract void unlock(Job j, LockInfo l);
     
+    public abstract void jobCompleted(Job j);
+    
     public abstract double getBlockingTime(TaskSet ts,Task t);
 }
 

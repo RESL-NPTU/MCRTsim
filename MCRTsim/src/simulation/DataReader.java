@@ -35,12 +35,12 @@ public class DataReader
         root = document.getRootElement();
         switch(root.getName())
         {
-            case "Workload":
+            case "workload":
             {
                 this.readWorkload();
                 break;
             }
-            case "Processor":
+            case "processor":
             {
                 this.readProcessor();
                 break;
@@ -60,12 +60,12 @@ public class DataReader
             
             switch(typeElement.getQualifiedName())
             {
-                case "Resources":
+                case "resources":
                 {
                     this.creatResourcesSet(typeElement);
                     break;
                 }
-                case "Task":
+                case "task":
                 {
                     this.creatTaskSet(typeElement);
                     break;
@@ -74,42 +74,77 @@ public class DataReader
         }
     }
     
-    public void readProcessor() throws IOException
+    private void creatResourcesSet(Element resourceElement)
+    {
+        Resources resources = new Resources();
+        resources.setID(Integer.valueOf(resourceElement.attribute("ID").getText()));
+        resources.setResourcesAmount(Integer.valueOf(resourceElement.attribute("quantity").getText()));
+        this.ds.getResourceSet().add(resources);
+    }
+    
+    private void creatTaskSet(Element taskElement)
+    {
+        Task task = new Task();
+        task.setID(Integer.valueOf(taskElement.attribute("ID").getText()));
+    //尚未加入    //task.setType(taskElement.attribute("type").getText());
+        
+        task.setEnterTime((int)(Double.parseDouble(taskElement.elementText("arrivalTime"))*100000));
+        task.setPeriod((int)(Double.parseDouble(taskElement.elementText("period"))*100000));
+        task.setRelativeDeadline((int)(Double.parseDouble(taskElement.elementText("relativeDeadline"))*100000));
+        task.setComputationAmount((int)(Double.parseDouble(taskElement.elementText("computationAmount"))*100000));
+        
+        CriticalSectionSet css = new CriticalSectionSet();
+        if(taskElement.element("criticalSections") != null)
+        {
+            Iterator cssIterator = taskElement.element("criticalSections").elementIterator("criticalSection");
+            while(cssIterator.hasNext())
+            {
+                Element cssElement = (Element)cssIterator.next();
+                CriticalSection c = new CriticalSection();
+                c.setResources(this.ds.getResourceSet().getResources(Integer.valueOf(cssElement.attribute("resourceID").getText()) - 1));
+                this.ds.getResourceSet().getResources(Integer.valueOf(cssElement.attribute("resourceID").getText()) - 1).getAccessSet().add(task);
+                c.setStartTime((int)(Double.parseDouble(cssElement.attribute("startTime").getText())*100000));
+                c.setEndTime((int)(Double.parseDouble(cssElement.attribute("endTime").getText())*100000));
+                css.add(c);
+            }
+        }
+        task.setCriticalSectionSet(css);
+        task.setMaxProcessingSpeed(Double.valueOf(root.attribute("baseSpeed").getText()));
+        task.setUtilization();
+        this.ds.getTaskSet().add(task);
+    }
+    
+    
+    
+    public void readProcessor() throws IOException//讀取處理器
     {
         Iterator it = root.elementIterator();
         
         //建立Processor
-        //System.out.println("ProcessorModel:" + root.attribute("ProcessorModel").getText());
-        this.ds.getProcessor().setProcessorModel(root.attribute("Model").getText());
-        this.ds.getProcessor().setDVFSType(root.attribute("DVFSType").getText());
+        this.ds.getProcessor().setProcessorModel(root.attribute("model").getText());
+        this.ds.getProcessor().setDVFSType(root.attribute("DVFStype").getText());
         
         //建立Core
         while(it.hasNext())
         {
             Element processorElement = (Element)it.next();
-            //System.out.println("Core:");
             Vector<Core> cores = new Vector<Core>();
             DynamicVoltageRegulator dynamicVoltageRegulator = new DynamicVoltageRegulator();
-            //System.out.println("  CoreID:" + coreElement.attribute("ID").getText());
-//            for(int i = 0 ; i < Integer.valueOf(processorElement.attribute("Number").getText()) ;i++)
-//            {
-//                cores.add(new Core());
-//            }
-//            
+            
             Iterator coreAtb = processorElement.attributeIterator();
             while(coreAtb.hasNext())
             {
                 Attribute atb = (Attribute)coreAtb.next();
                 switch(atb.getQualifiedName())
                 {
-                    case "Number":
+                    case "quantity":
                         for(int i = 0 ; i < Integer.valueOf(atb.getText());i++)
                         {
                             cores.add(new Core());
                         }
                         break;
                         
-                    case "Type":
+                    case "type":
                         dynamicVoltageRegulator.setCoreType(atb.getText());
                         break;
                         
@@ -126,10 +161,10 @@ public class DataReader
                 switch(element.getQualifiedName())
                 {
                     
-                    case "AvailableSpeed":
+                    case "availableSpeeds":
                         setAvailableSpeed(dynamicVoltageRegulator,element);
                         break;
-                    case "PowerConsumptionFunction":
+                    case "powerConsumptionFunction":
                         setPowerConsumptionFunction(dynamicVoltageRegulator,element);
                         break;
                     default:
@@ -137,11 +172,6 @@ public class DataReader
                 }
             }
 
-//            for(int i = 0; i < ss.size(); i++)
-//            {
-//                ss.get(i).setNormalization((double)ss.get(i).getFrequency() / ss.get(ss.size() - 1).getFrequency());
-//                //System.out.println("NF = " + ss.get(i).getNormalization());
-//            }
             if(this.ds.getProcessor().isPerCore)
             {
                 for(Core c : cores)
@@ -164,134 +194,51 @@ public class DataReader
         }
     }
     
-    private void creatResourcesSet(Element resourceElement)
-    {
-        Resources resources = new Resources();
-        resources.setID(Integer.valueOf(resourceElement.attribute("ID").getText()));
-        resources.setResourcesAmount(Integer.valueOf(resourceElement.elementText("ResourceAmount")));
-        //System.out.println("Resoruce"+res.getID()+" = "+ Integer.valueOf(resourceElement.elementText("ResourceAmount")));
-        this.ds.getResourceSet().add(resources);
-    }
-    
-    private void creatTaskSet(Element taskElement)
-    {
-        Task task = new Task();
-        //System.out.println("  TaskID:" + taskElement.attribute("ID").getText());
-        task.setID(Integer.valueOf(taskElement.attribute("ID").getText()));
-        //System.out.println("  TaskPeriod:" + taskElement.elementText("Period"));
-        task.setEnterTime((int)(Double.parseDouble(taskElement.elementText("EnterTime"))*100000));
-        task.setPeriod((int)(Double.parseDouble(taskElement.elementText("Period"))*100000));
-        //System.out.println("  TaskDeadline:" + taskElement.elementText("RelativeDeadline"));
-        task.setRelativeDeadline((int)(Double.parseDouble(taskElement.elementText("RelativeDeadline"))*100000));
-        //System.out.println("  TaskComputationAmount:" + taskElement.elementText("ComputationAmount"));
-        task.setComputationAmount((int)(Double.parseDouble(taskElement.elementText("ComputationAmount"))*100000));
-
-        Iterator cssIterator = taskElement.elementIterator("CriticalSection");
-        CriticalSectionSet css = new CriticalSectionSet();
-        while(cssIterator.hasNext())
-        {
-            Element cssElement = (Element)cssIterator.next();
-            CriticalSection c = new CriticalSection();
-            //System.out.println("    Resource:" + cssElement.elementText("Resource"));
-            c.setResources(this.ds.getResourceSet().getResources(Integer.valueOf(cssElement.elementText("Resource")) - 1));
-            this.ds.getResourceSet().getResources(Integer.valueOf(cssElement.elementText("Resource")) - 1).getAccessSet().add(task);
-            //System.out.println("      StartTime:" + cssElement.elementText("StartTime"));
-            c.setStartTime((int)(Double.parseDouble(cssElement.elementText("StartTime"))*100000));
-            //System.out.println("      EndTime:" + cssElement.elementText("EndTime"));
-            c.setEndTime((int)(Double.parseDouble(cssElement.elementText("EndTime"))*100000));
-            css.add(c);
-        }
-        task.setCriticalSectionSet(css);
-        //System.out.println("  Frequency:" + root.attribute("Frequency").getText());
-        task.setMaxProcessingSpeed(Double.valueOf(root.attribute("Frequency").getText()));
-        task.setUtilization();
-        this.ds.getTaskSet().add(task);
-    }
-    
-    private void setSpeedRange(DynamicVoltageRegulator ss, Element element)
-    {
-        Iterator it = element.elementIterator();
-        while(it.hasNext())
-        {
-            Element SRElement = (Element)it.next();
-            Speed speed = new Speed();
-            switch(SRElement.getQualifiedName())
-            {
-                case "MaxFrequency":
-                    speed.setFrequency(Double.valueOf(SRElement.getText()));
-                    ss.addSpeed(speed);
-                    break;
-                case "MinFrequency":
-                    speed.setFrequency(Double.valueOf(SRElement.getText()));
-                    ss.addSpeed(speed);
-                    break;
-                default:
-                    System.out.println("setSpeedRange Error!!!!!");
-            }
-        }
-    }
-    
     private void setAvailableSpeed(DynamicVoltageRegulator dynamicVoltageRegulator, Element element)
     {
         Iterator it = element.elementIterator();
         while(it.hasNext())
         {
             Element ASElement = (Element)it.next();
-            
-            switch(ASElement.getQualifiedName())
+            Speed speed = new Speed(); 
+
+            //需多加入idle判斷
+            speed.setSpeed(Integer.valueOf(ASElement.getText()));
+            Iterator atb_it = ASElement.attributeIterator();
+            if(atb_it.hasNext())
             {
-                case "SpeedRange":
-                    setSpeedRange(dynamicVoltageRegulator,ASElement);
+                Attribute atb = (Attribute)atb_it.next();
+                switch(atb.getQualifiedName())
+                {
+                    case "powerConsumption":
+                        speed.setPowerConsumption(Double.valueOf(atb.getText()));
                     break;
-                case "Speed":
-                    setSpeed(dynamicVoltageRegulator,ASElement);
-                    break;
-                default:
-                    System.out.println("setAvailableSpeed Error!!!!!");
+                    default:
+                        System.out.println("setAvailableSpeed Error!!!");
+                }
             }
+            dynamicVoltageRegulator.addSpeed(speed);
+
         }
     }
     
-    private void setSpeed(DynamicVoltageRegulator dynamicVoltageRegulator, Element element)
-    {
-        Iterator it = element.elementIterator();
-        //System.out.println(element.getQualifiedName());
-        Speed speed = new Speed(); 
-        while(it.hasNext())
-        {
-            Element SElement = (Element)it.next();
-            switch(SElement.getQualifiedName())
-            {
-                case "Frequency":
-                    speed.setFrequency(Integer.valueOf(SElement.getText()));
-                    break;
-                case "PowerConsumption":
-                    speed.setPowerConsumption(Double.valueOf(SElement.getText()));
-                    break;
-                default:
-                    System.out.println("setSpeed Error!!!!!");
-            }
-        }
-        
-        dynamicVoltageRegulator.addSpeed(speed);
-    }
     
     private void setPowerConsumptionFunction(DynamicVoltageRegulator ss, Element element)
     {
-        Iterator it = element.elementIterator();
+        Iterator it = element.attributeIterator();
         while(it.hasNext())
         {
-            Element PCFElement = (Element)it.next();
-            switch(PCFElement.getQualifiedName())
+            Attribute PCFatb = (Attribute)it.next();
+            switch(PCFatb.getQualifiedName())
             {
-                case "Alpha":
-                    ss.setAlpha(Double.valueOf(PCFElement.getText()));
+                case "alpha":
+                    ss.setAlpha(Double.valueOf(PCFatb.getText()));
                     break;
-                case "Beta":
-                    ss.setBeta(Double.valueOf(PCFElement.getText()));
+                case "beta":
+                    ss.setBeta(Double.valueOf(PCFatb.getText()));
                     break;
-                case "Gamma":
-                    ss.setGamma(Double.valueOf(PCFElement.getText()));
+                case "gamma":
+                    ss.setGamma(Double.valueOf(PCFatb.getText()));
                     break;
                 default:
                     System.out.println("setProwerConsumptionFunction Error!!!!!");

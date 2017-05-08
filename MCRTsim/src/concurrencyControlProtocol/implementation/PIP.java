@@ -65,6 +65,11 @@ public class PIP extends ConcurrencyControlProtocol
         System.out.println("unLock: R"+l.getResources().getID());
     }
     
+    public void jobCompleted(Job j) 
+    {
+        
+    }
+    
     @Override
     public double getBlockingTime(TaskSet ts,Task t) 
     {

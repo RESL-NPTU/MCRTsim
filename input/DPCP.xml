@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<workload baseSpeed="400" numResources="3" numTasks="3" >
+    <resources ID="1" quantity="1" />
+    <resources ID="2" quantity="1" />
+    <resources ID="3" quantity="1" />
+    <task ID="1" type="periodic">
+        <arrivalTime>0.0</arrivalTime>
+        <period>3.0</period>
+        <relativeDeadline>3.0</relativeDeadline>
+        <computationAmount>1.0</computationAmount>
+        <criticalSections>
+            <criticalSection resourceID="1" startTime="0.2" endTime="0.4" />
+            <criticalSection resourceID="2" startTime="0.5" endTime="0.9" />
+        </criticalSections>
+    </task>
+    <task ID="2" type="periodic">
+        <arrivalTime>0.0</arrivalTime>
+        <period>8.0</period>
+        <relativeDeadline>8.0</relativeDeadline>
+        <computationAmount>3.0</computationAmount>
+        <criticalSections>
+            <criticalSection resourceID="3" startTime="0.7" endTime="1.3" />
+            <criticalSection resourceID="1" startTime="1.4" endTime="1.6" />
+        </criticalSections>
+    </task>
+    <task ID="3" type="periodic">
+        <arrivalTime>0.0</arrivalTime>
+        <period>20.0</period>
+        <relativeDeadline>20.0</relativeDeadline>
+        <computationAmount>5.0</computationAmount>
+        <criticalSections>
+            <criticalSection resourceID="2" startTime="1.9" endTime="2.6" />
+            <criticalSection resourceID="3" startTime="3" endTime="4" />
+        </criticalSections>
+    </task>
+</workload>
+
+
+
+
+
+
+
+

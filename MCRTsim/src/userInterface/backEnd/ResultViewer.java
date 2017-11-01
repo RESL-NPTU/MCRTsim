@@ -9,20 +9,19 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.util.Vector;
 import javax.swing.JScrollPane;
-import simulation.Core;
+import SystemEnvironment.Core;
 import userInterface.frontEnd.InfoWin;
 
 /**
  *
  * @author YC
  */
-public class ResultViewer extends JScrollPane 
-{
+public class ResultViewer extends JScrollPane {
     public InfoWin parent;
     private Vector<Core> Cores;
     private ScheduleResult sr;
     private TimeLineResult tlr;
-    public int scale;//比例尺
+    public int scale;
 
     public ResultViewer(InfoWin win , Vector<Core> cores , String type)
     {
@@ -34,11 +33,11 @@ public class ResultViewer extends JScrollPane
         
         if(type.equals("AllTasks"))
         {
-            this.sr.startTaskTimeLineSchedule(); //創建多核心TaskTimeLine的圖形化結果
+            this.sr.startTaskTimeLineSchedule();
         }
         else if(type.equals("AllCores"))
         {
-            this.sr.startCoreTimeLineSchedule();//創建多核心CoreTimeLine的圖形化結果
+            this.sr.startCoreTimeLineSchedule();
         }
         
         this.tlr = new TimeLineResult(sr);
@@ -52,18 +51,18 @@ public class ResultViewer extends JScrollPane
         this.Cores = new Vector<>();
         this.Cores.add(c);
         this.sr = new ScheduleResult(this);
-        this.sr.startTaskTimeLineSchedule();//創建單核心TaskTimeLine的圖形化結果
+        this.sr.startTaskTimeLineSchedule();
         this.tlr = new TimeLineResult(sr);
         this.setViewportView(tlr);
     }
     
     private void init()
     {
-        this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);//水平滾輪
-        this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);//垂直滾輪
-        this.getHorizontalScrollBar().setUnitIncrement(16);//水平滾輪移動倍率
-        this.getVerticalScrollBar().setUnitIncrement(16);//垂直滾輪移動倍率
-        this.scale = 1;
+        this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        this.getHorizontalScrollBar().setUnitIncrement(16);
+        this.getVerticalScrollBar().setUnitIncrement(16);
+        this.scale = 1 ;
         
         this.getHorizontalScrollBar().addAdjustmentListener
         (new AdjustmentListener()
@@ -101,7 +100,7 @@ public class ResultViewer extends JScrollPane
         return this.sr;
     }
     
-    public TimeLineResult getResultViewer()
+    public TimeLineResult getTimeLineResult()
     {
         return this.tlr;
     }

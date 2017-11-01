@@ -5,8 +5,8 @@
  */
 package userInterface.backEnd;
 
+import WorkLoad.CriticalSection;
 import javax.swing.JPanel;
-import simulation.LockInfo;
 
 /**
  *
@@ -18,12 +18,12 @@ public class ResourcePanel extends JPanel
     private String resourceID;
     private String resourcesAmount;
     
-    public ResourcePanel(LockInfo lockInfo)
+    public ResourcePanel(CriticalSection cs)
     {
         super();
-        resourcesID = String.valueOf(lockInfo.getResources().getID());
-        resourcesAmount = String.valueOf(lockInfo.getResources().getResourcesAmount());
-        resourceID = String.valueOf(lockInfo.getResource().getID());
+        resourcesID = String.valueOf(cs.getUseSharedResource().getID());
+        resourcesAmount = String.valueOf(cs.getUseSharedResource().getResourcesAmount());
+        resourceID = String.valueOf(cs.getResourceID());
         this.setToolTipText("R"+resourcesID+"(" + resourceID +"/" + resourcesAmount +")");
     }
     

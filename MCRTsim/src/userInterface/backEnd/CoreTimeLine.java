@@ -10,6 +10,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import mcrtsim.Definition.CoreStatus;
 
 /**
  *
@@ -17,8 +18,8 @@ import java.util.ArrayList;
  */
 public class CoreTimeLine
 {
-    int resourceHeight=13;//resource圖形高度
-    int taskHeight = 80;//task圖形高度
+    int resourceHeight=13;
+    int taskHeight = 80;
     int ID;
     Point o; //時間軸起始位置
     ScheduleResult parent;
@@ -57,7 +58,7 @@ public class CoreTimeLine
         executions.add(te);
     }
     
-    public void drawItself(Graphics g)//繪製結果
+    public void drawItself(Graphics g)
     {
         int baseunit = this.parent.getBaseunit();
         double finalTime = this.parent.getFinalTime();
@@ -115,9 +116,54 @@ public class CoreTimeLine
             }
         }
 
-        for(TaskExecution te : executions)//繪製executions
+        for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("W"))
+            if(te.getStatus() == CoreStatus.MIGRATION)
+            {
+                
+            }
+            else if(te.getStatus() == CoreStatus.CONTEXTSWITCH)
+            {
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect((int)(o.x + te.getStartTime() * baseunit ), o.y - (this.taskHeight/2), (int)(te.getExecutionTime() * baseunit), this.taskHeight/2);
+                g.setColor(Color.black);
+                if(this.parent.isMultiCore)
+                {
+                    g.drawRect((int)(o.x + te.getStartTime() * baseunit ), yHeight - 16, (int)(te.getExecutionTime() * baseunit), 16);
+                    g.drawLine((int)(o.x + te.getStartTime() * baseunit ), yHeight, (int)(o.x + te.getStartTime() * baseunit), yHeight + 5);
+                    
+                    g.setColor(resourceColor[19 - (te.getCoreID()%19)-1]);
+                    g.fillRect((int)(o.x + te.getStartTime() * baseunit)+1, yHeight - 15, (int)(te.getExecutionTime() * baseunit) - 1, 14);
+                    g.setColor(reverseColor(resourceColor[19 - (te.getCoreID()%19)-1]));
+    
+                    char[] data = String.valueOf(te.getCoreID()).toCharArray();
+
+                    if((int)(te.getExecutionTime() * baseunit) > data.length * 8)
+                    {
+                        g.drawChars(data, 0, data.length, (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
+                    }
+                
+                    g.setColor(Color.black);
+                }
+                
+                DecimalFormat df = new DecimalFormat("##.00");
+                double time = Double.parseDouble(df.format(te.getStartTime()));
+                
+                if(((int)(time*10)%10)!=0)
+                {
+                    g.drawString(""+ time, (int)(o.x - 4 + te.getStartTime() * baseunit), o.y + 40);
+                    g.drawLine((int)(o.x + te.getStartTime() * baseunit), o.y, (int)(o.x + te.getStartTime() * baseunit), o.y + 25);
+                }
+
+                time = Double.parseDouble(df.format(te.getEndTime()));
+
+                if(( (int)(time * 10) % 10) != 0)
+                {
+                    g.drawString(""+ time, (int)(o.x - 4 + te.getEndTime() * baseunit), o.y + 40);
+                    g.drawLine((int)(o.x + te.getEndTime() * baseunit), o.y, (int)(o.x + te.getEndTime() * baseunit), o.y + 25);
+                }
+            }
+            else if(te.getStatus() == CoreStatus.WAIT)
             {
                 g.fillRect((int)(o.x + te.getStartTime() * baseunit ), o.y - this.taskHeight, (int)(te.getExecutionTime() * baseunit), this.taskHeight);
                 
@@ -128,12 +174,17 @@ public class CoreTimeLine
                     g.fillRect((int)(o.x + te.getStartTime() * baseunit)+1, yHeight - 15, (int)(te.getExecutionTime() * baseunit) - 1, 14);
                     g.setColor(reverseColor(resourceColor[19 - (te.getTaskID()%19)-1]));
 
-                    char[] data = String.valueOf(te.getTaskID()).toCharArray();
+                    char[] data = String.valueOf(te.getTaskID()+","+te.getJobID()).toCharArray();
 
                     if((int)(te.getExecutionTime() * baseunit) > data.length * 8)
                     {
                         g.drawChars(data, 0, data.length, (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
                     }
+                    else if((int)((te.getExecutionTime() * baseunit) / 8) > 1)
+                    {
+                        g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
+                    }
+                    
 
                     g.setColor(Color.black);
                 }
@@ -155,13 +206,18 @@ public class CoreTimeLine
                     g.drawLine((int)(o.x + te.getEndTime() * baseunit), o.y, (int)(o.x + te.getEndTime() * baseunit), o.y + 25);
                 }
             }
-            else if(te.getStatus().equals("X"))
+            else if(te.getStatus() == CoreStatus.WRONG)
             {
                 g.setColor(Color.red);
-                g.drawString("X", (int) (o.x - 3 + te.getStartTime() * baseunit), o.y - 75);
+                
+                for(int i = 0 ; i<3 ; i++)
+                {
+                    g.drawString("X", (int)(o.x - 3 + te.getStartTime() * baseunit), o.y - this.taskHeight - i);
+                }
+                
                 g.setColor(Color.BLACK);
             }
-            else if( te.getStatus().equals("E") )
+            else if( te.getStatus() == CoreStatus.EXECUTION)
             {
                 g.drawRect((int)(o.x + te.getStartTime() * baseunit ), o.y - this.taskHeight, (int)(te.getExecutionTime() * baseunit), this.taskHeight);
                 
@@ -172,11 +228,15 @@ public class CoreTimeLine
                     g.fillRect((int)(o.x + te.getStartTime() * baseunit)+1, yHeight - 15, (int)(te.getExecutionTime() * baseunit) - 1, 14);
                     g.setColor(reverseColor(resourceColor[19 - (te.getTaskID()%19)-1]));
 
-                    char[] data = String.valueOf(te.getTaskID()).toCharArray();
+                    char[] data = String.valueOf(te.getTaskID()+","+te.getJobID()).toCharArray();
 
                     if((int)(te.getExecutionTime() * baseunit) > data.length * 8)
                     {
                         g.drawChars(data, 0, data.length, (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
+                    }
+                    else if((int)((te.getExecutionTime() * baseunit) / 8) > 1)
+                    {
+                        g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
                     }
 
                     g.setColor(Color.black);
@@ -208,7 +268,7 @@ public class CoreTimeLine
     {
         for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("E"))
+            if(te.getStatus() == CoreStatus.EXECUTION)
             {
                 int i=0;
                 for(ResourcePanel reP : te.getResourcePanels())
@@ -227,7 +287,7 @@ public class CoreTimeLine
         
         for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("E"))
+            if(te.getStatus() == CoreStatus.EXECUTION)
             {
                 int i=0;
                 for(ResourcePanel reP : te.getResourcePanels())
@@ -247,7 +307,7 @@ public class CoreTimeLine
                     }
                     else if((int)((te.getExecutionTime() * baseunit) / 8) > 1)
                     {
-                        g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
+                            g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
                     }
                     g.setColor(Color.BLACK);
                 }

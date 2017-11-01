@@ -165,6 +165,182 @@ public class wgWorkload
     
     public void creatCriticalSection() 
     {
+        int[] cAll = new int[this.resourcesNumber];
+        int[] c1 = new int[this.resourcesNumber / 4];
+        int[] c2 = new int[this.resourcesNumber / 4];
+        int[] c3 = new int[this.resourcesNumber / 4];
+        int[] c4 = new int[this.resourcesNumber - c1.length - c2.length - c3.length];
+        
+        int[] tAll = new int[this.taskSet.size()];
+        for(int i = 0; i < this.taskSet.size() / 4; i++)
+        {
+            tAll[i] = 0;
+        }
+        for(int i = 0; i < this.taskSet.size() / 4; i++)
+        {
+            tAll[i + (this.taskSet.size() / 4)] = 1;
+        }
+        for(int i = 0; i < this.taskSet.size() / 4; i++)
+        {
+            tAll[i + (this.taskSet.size() / 4)*2] = 2;
+        }
+        for(int i = 0; i < this.taskSet.size() / 4; i++)
+        {
+            tAll[i + (this.taskSet.size() / 4)*3] = 3;
+        }
+        
+        for(int i = 0; i < tAll.length; i++)
+        {
+            int r=(int)(Math.random() * tAll.length);
+            int temp = tAll[i];
+            tAll[i] = tAll[r];
+            tAll[r] = temp;
+        }
+        
+        for(int i = 0; i < this.resourcesNumber; i++)
+        {
+            cAll[i] = i;
+        }
+        
+        for(int i = 0; i < cAll.length; i++)
+        {
+            int r=(int)(Math.random() * cAll.length);
+            int temp = cAll[i];
+            cAll[i] = cAll[r];
+            cAll[r] = temp;
+        }
+        
+        for(int i = 0; i < c1.length; i++)
+        {
+            c1[i] = cAll[i];
+        }
+        
+        for(int i = 0; i < c2.length; i++)
+        {
+            c2[i] = cAll[i + c1.length];
+        }
+        
+        for(int i = 0; i < c3.length; i++)
+        {
+            c3[i] = cAll[i + c1.length + c2.length];
+        }
+        
+        for(int i = 0; i < c4.length; i++)
+        {
+            c4[i] = cAll[i + c1.length + c2.length + c3.length];
+        }
+        
+        for(wgTask t : this.taskSet)
+        {
+            int accessedResourcesNumber = 0;
+            int[] tempArray = null;
+            
+            //switch((int)(Math.random()*4))
+            switch(tAll[t.getID()-1])
+            {
+                case 0:
+                {
+                    accessedResourcesNumber =  wgMath.rangeRandom(this.MinaccessedResourcesNumber, this.MaxaccessedResourcesNumber < c1.length ? this.MaxaccessedResourcesNumber : c1.length);
+                
+                    for(int ii = 0; ii<c1.length;ii++)
+                    {
+                        int r=(int)(Math.random()*c1.length);
+                        int temp = c1[ii];
+                        c1[ii] = c1[r];
+                        c1[r] = temp;
+                    }
+                    tempArray = c1;
+                    break;
+                }
+                case 1:
+                {
+                    accessedResourcesNumber =  wgMath.rangeRandom(this.MinaccessedResourcesNumber, this.MaxaccessedResourcesNumber < c2.length ? this.MaxaccessedResourcesNumber : c2.length);
+                
+                    for(int ii = 0; ii<c2.length;ii++)
+                    {
+                        int r=(int)(Math.random()*c2.length);
+                        int temp = c2[ii];
+                        c2[ii] = c2[r];
+                        c2[r] = temp;
+                    }
+                    tempArray = c2;
+                    break;
+                }
+                case 2:
+                {
+                    accessedResourcesNumber =  wgMath.rangeRandom(this.MinaccessedResourcesNumber, this.MaxaccessedResourcesNumber < c3.length ? this.MaxaccessedResourcesNumber : c3.length);
+                
+                    for(int ii = 0; ii<c3.length;ii++)
+                    {
+                        int r=(int)(Math.random()*c3.length);
+                        int temp = c3[ii];
+                        c3[ii] = c3[r];
+                        c3[r] = temp;
+                    }
+                    tempArray = c3;
+                    break;
+                }
+                case 3:
+                {
+                    accessedResourcesNumber =  wgMath.rangeRandom(this.MinaccessedResourcesNumber, this.MaxaccessedResourcesNumber < c4.length ? this.MaxaccessedResourcesNumber : c4.length);
+                
+                    for(int ii = 0; ii<c4.length;ii++)
+                    {
+                        int r=(int)(Math.random()*c4.length);
+                        int temp = c4[ii];
+                        c4[ii] = c4[r];
+                        c4[r] = temp;
+                    }
+                    tempArray = c4;
+                    break;
+                }
+            }
+            
+            
+            for(int i = 0 ; i < accessedResourcesNumber ; i++)
+            {
+                wgCriticalSection cs = new wgCriticalSection(t.getCriticalSectionSet());
+                
+                cs.setResources(cs.parent.parent.parent.parent.getResourcesSet().getResources(tempArray[i]));
+
+                cs.setStartTime(wgMath.rangeRandom(0,t.getComputationAmount()));
+
+                wgCriticalSection cs2 = t.getCriticalSectionSet().getCriticalSectionFor(cs);
+
+                if(cs2 == null)
+                {
+                    double maximunEndTime = cs.getStartTime() + t.getComputationAmount() * (this.getCriticalSectionRatio() - t.getCriticalSectionSet().getCriticalSectionRatio());
+
+                    if(maximunEndTime > t.getComputationAmount())
+                    {
+                        maximunEndTime = t.getComputationAmount();
+                    }
+
+                    do
+                    {
+                        cs.setEndTime(wgMath.rangeRandom(cs.getStartTime(), maximunEndTime));
+                    }while(!(t.getCriticalSectionSet().getCriticalSectionFor(cs.getEndTime()) == null));
+                }
+                else
+                {
+                    do
+                    {
+                        cs.setEndTime(wgMath.rangeRandom(cs.getStartTime(), cs2.getEndTime()));
+                    }while(!(t.getCriticalSectionSet().getCriticalSectionFor(cs.getEndTime()) == cs2));
+                }
+
+                if(cs.getCriticalSectionTime() == 0)//Remove Needless Critical Section
+                {
+                    i--;
+                }
+                else
+                {
+                    t.getCriticalSectionSet().addCriticalSection(cs);
+                }
+            }
+        }
+        
+/*        
         for(wgTask t : this.taskSet)
         {
             int accessedResourcesNumber = wgMath.rangeRandom(this.MinaccessedResourcesNumber, this.MaxaccessedResourcesNumber < this.resourcesNumber ? this.MaxaccessedResourcesNumber : this.resourcesNumber);
@@ -228,6 +404,7 @@ public class wgWorkload
             }
             System.out.println("1234");
         }
+*/
     }
     
     public String checkQuality()

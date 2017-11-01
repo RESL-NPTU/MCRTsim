@@ -5,10 +5,11 @@
  */
 package userInterface.backEnd;
 
+import ResultSet.MissDeadlineInfo;
+import ResultSet.SchedulingInfo;
+import WorkLoad.CriticalSection;
 import java.util.ArrayList;
-import simulation.LockInfo;
-import simulation.Result;
-import simulation.CoreStatus;
+import mcrtsim.Definition.CoreStatus;
 
 /**
  *
@@ -18,11 +19,12 @@ public class TaskExecution
 {
     private int coreID;
     private int taskID;
+    private int jobID;
     private double executionTime;
     private double startTime;
     private double endTime;
     private double speed;
-    private String status;
+    private CoreStatus status;
     private ArrayList<ResourcePanel> resourcePanels;
 
     public TaskExecution()
@@ -30,36 +32,56 @@ public class TaskExecution
         
     }
     
-    public TaskExecution(Result result)
+    public TaskExecution(SchedulingInfo schedulingInfo)
     {
-        this.coreID = result.getCore().getID();
-        this.taskID = result.getJob().getTask().getID();
-        this.startTime = result.getStartTime();
-        this.endTime= result.getEndTime();
+        this.coreID = schedulingInfo.getCore().getID();
+        this.taskID = schedulingInfo.getJob().getParentTask().getID();
+        this.jobID = schedulingInfo.getJob().getID();
+        this.startTime = schedulingInfo.getStartTime();
+        this.endTime= schedulingInfo.getEndTime();
         
-        if(result.getStatus() == CoreStatus.EXECUTION)
+        if(schedulingInfo.getCoreStatus() == CoreStatus.EXECUTION)
         {
-            status = "E";
-            speed = result.getFrequencyOfSpeed();
+            status = schedulingInfo.getCoreStatus();
+            speed = schedulingInfo.getUseSpeed();
         }
-        else if(result.getStatus() == CoreStatus.WRONG)
+        else if(schedulingInfo.getCoreStatus() == CoreStatus.WAIT)
         {
-            status = "X";
-            speed = 0;
+            status = schedulingInfo.getCoreStatus();
+            speed = schedulingInfo.getUseSpeed();
         }
-        else if(result.getStatus() == CoreStatus.WAIT)
+        else if(schedulingInfo.getCoreStatus() == CoreStatus.CONTEXTSWITCH)
         {
-            status = "W";
-            speed = result.getFrequencyOfSpeed();
+            status = schedulingInfo.getCoreStatus();
+            speed = schedulingInfo.getUseSpeed();
+        }
+        else if(schedulingInfo.getCoreStatus() == CoreStatus.MIGRATION)
+        {
+            status = schedulingInfo.getCoreStatus();
+            speed = schedulingInfo.getUseSpeed();
         }
         
         resourcePanels = new ArrayList<ResourcePanel>();
         executionTime=endTime-startTime;
         
-        for(LockInfo lockInfo : result.getLockedResource())
+        for(CriticalSection cs : schedulingInfo.getEnteredCriticalSectionSet())
         {
-            resourcePanels.add(new ResourcePanel(lockInfo));
+            resourcePanels.add(new ResourcePanel(cs));
         }
+    }
+    
+    public TaskExecution(MissDeadlineInfo missDeadlineInfo)
+    {
+        this.coreID = 0;
+        this.taskID = missDeadlineInfo.getMissTask().getID();
+        this.jobID = missDeadlineInfo.getMissJob().getID();
+        this.startTime = missDeadlineInfo.getMissTime();
+        this.endTime = this.startTime;
+        this.status = CoreStatus.WRONG;
+        this.speed = 0;
+        resourcePanels = new ArrayList<ResourcePanel>();
+        executionTime=endTime-startTime;
+        
     }
     
     public double getExecutionTime()
@@ -77,7 +99,7 @@ public class TaskExecution
         return this.endTime;
     }
     
-    public String getStatus()
+    public CoreStatus getStatus()
     {
         return this.status;
     }
@@ -95,6 +117,11 @@ public class TaskExecution
     public int getTaskID()
     {
         return this.taskID;
+    }
+    
+    public int getJobID()
+    {
+        return this.jobID;
     }
     
     public ArrayList<ResourcePanel> getResourcePanels()

@@ -5,15 +5,15 @@
  */
 package concurrencyControlProtocol.implementation;
 
+import SystemEnvironment.Processor;
+import WorkLoad.Job;
+import WorkLoad.Priority;
+import WorkLoad.SharedResource;
+import WorkLoad.Task;
 import concurrencyControlProtocol.ConcurrencyControlProtocol;
-import simulation.CriticalSection;
-import simulation.DataSetting;
-import simulation.Final;
-import simulation.Job;
-import simulation.LockInfo;
-import simulation.Resources;
-import simulation.Task;
-import simulation.TaskSet;
+import java.util.Stack;
+import java.util.Vector;
+import mcrtsim.Definition;
 
 /**
  *
@@ -21,97 +21,143 @@ import simulation.TaskSet;
  */
 public class PCP extends ConcurrencyControlProtocol
 {
-    //Vector<Integer> ResourceCeiling;
+    Vector<Priority> ceilingRes = new Vector<Priority>();
+    Priority ceilingSystem = Definition.Ohm;
+    Job ceilingJob;
+    SharedResource ceilingResource;
+    Stack<SharedResource> lockResource = new Stack<SharedResource>();
     
-    public PCP(DataSetting ds)
+    public PCP()
     {
-        super(ds);
         this.setName("Priority Ceiling Protocol");
-        this.setPIP(true);
+    }
 
-        for(int i = 0; i < this.getDataSetting().getResourceSet().size(); i++)
+    @Override
+    public void preAction(Processor p)
+    {
+        for(int i = 0; i < p.getSharedResourceSet().size(); i++)
         {
-            this.getDataSetting().getResourceSet().getResources(i).setPriorityCeiling(Final.Ohm);
-            for(int j = 0; j < this.getDataSetting().getResourceSet().getResources(i).getAccessSet().size(); j++)
+            this.ceilingRes.add(Definition.Ohm);
+            for(Task t : p.getSharedResourceSet().get(i).getAccessTaskSet())
             {
-                Task task = this.getDataSetting().getResourceSet().getResources(i).getAccessSet().getTask(j);
-                Resources resources = this.getDataSetting().getResourceSet().getResources(i);
-                
-                if(task.isPriorityHigher(resources.getPriorityCeiling()) > 0)
+                if(t.getPriority().isHigher(this.ceilingRes.get(i)))
                 {
-                    resources.setPriorityCeiling(task.getPriority());
+                    this.ceilingRes.set(i, t.getPriority());
                 }
             }
         }
-    }
-
-    
-    public boolean leadLock(Job j) 
-    {
-        return true;
-    }
-
-    public boolean lock(Job j, Resources r)
-    {
-        if(r.getLeftResourceAmount() != 0) //檢查使用所有資源是否已被Lock：通過
+        
+        for(int i = 0; i < this.ceilingRes.size(); i++)
         {
-            if(j.isPriorityHigher(j.getLocationCore().getSystemPriorityCeiling(j)) > 0) //檢查與System Ceiling：通過
-            {
-                j.getLocationCore().setSystemPriorityCeiling(r);
-                j.lock(r);
-                return true;
-            }
-            else //檢查與System Ceiling：阻擋
-            {
-                j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
-                return false;
-            }
-        }
-        else //檢查使用資源是否已被Lock：阻擋
-        {
-            j.getLocationCore().getResourcesOfSystemPriorityCeiling().blocked(j);
-            return false;
+            System.out.println("Res" + (i+1) + ":" + this.ceilingRes.get(i).getValue());
         }
     }
-    
+
     @Override
-    public void unlock(Job j, LockInfo l)
+    public void jobArrivesAction(Job j)
     {
-        j.unLock(l.getResources());//解鎖Resource
-        l.getResources().releaseWaitQueueAllJob();//釋放被阻擋的Job
-        j.currentPriorityOfInheritOrRevert();//還原Job的Priority
-        j.getLocationCore().restoreSystemTempCeiling();//釋放因鎖定Resource所造成的System Ceiling
+        
     }
-    
-    public void jobCompleted(Job j) 
+
+    @Override
+    public  void jobPreemptedAction(Job preemptedJob , Job newJob)
     {
         
     }
     
     @Override
-    public double getBlockingTime(TaskSet ts,Task t) 
+    public void jobExecuteAction(Job j)
     {
-        double maxBlock = 0;
-        double block=0;
         
-        for(int a = 0 ; a < ts.size();a++)
+    }
+
+    @Override
+    public SharedResource jobLockAction(Job j, SharedResource r)
+    {
+        if(r.getLeftResourceAmount() > 0)
         {
-            if(ts.getTask(a).isPriorityHigher(t.getPriority())<0)
+            if(j == this.ceilingJob)
             {
-                for(CriticalSection cs : ts.getTask(a).getCriticalSectionSet())
+                j.lockSharedResource(r);
+                this.lockResource.add(r);
+                if(this.ceilingRes.get(r.getID() - 1).isHigher(ceilingSystem))
                 {
-                    if(cs.getResources().isPriorityHigher(t.getPriority()) >= 0)
-                    {  
-                        block= cs.getEndTime() - cs.getStartTime();
-                        if(block>maxBlock)
-                        {
-                            maxBlock= block;
-                        }
+                    this.ceilingJob = j;
+                    this.ceilingSystem = this.ceilingRes.get(r.getID() - 1);
+                    this.ceilingResource = r;
+                }
+                return null;
+            }
+            else
+            {
+                if(j.getCurrentProiority().isHigher(this.ceilingSystem))
+                {
+                    j.lockSharedResource(r);
+                    this.lockResource.add(r);
+                    if(this.ceilingRes.get(r.getID() - 1).isHigher(ceilingSystem))
+                    {
+                        this.ceilingJob = j;
+                        this.ceilingSystem = this.ceilingRes.get(r.getID() - 1);
+                        this.ceilingResource = r;
                     }
+                    return null;
+                }
+                else
+                {
+                    return this.ceilingResource;
                 }
             }
-        }       
-        return maxBlock;
+        }
+        else
+        {
+            return r;
+        }
+    }
+
+    @Override
+    public void jobUnlockAction(Job j, SharedResource r)
+    {
+        if(r.getWaitQueue().size() > 0)
+        {
+            j.endInheritance();
+        }
+        j.unLockSharedResource(r);
+        this.lockResource.pop();
+        this.ceilingSystem = Definition.Ohm;
+        this.ceilingJob = null;
+        this.ceilingResource = null;
+        for(int i = 0; i < this.lockResource.size(); i++)
+        {
+            if(this.ceilingRes.get(this.lockResource.get(i).getID() - 1).isHigher(ceilingSystem))
+            {
+                ceilingSystem = this.ceilingRes.get(this.lockResource.get(i).getID() - 1);
+                this.ceilingResource = this.lockResource.get(i);
+                this.ceilingJob = this.lockResource.get(i).getWhoLockedLastResource(j); 
+            }
+        }    
+    }
+
+    @Override
+    public void jobCompletedAction(Job j)
+    {       
+        
+    }
+
+    @Override
+    public void jobDeadlineAction(Job j)
+    {
+        
+    }
+
+    @Override
+    public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
+    {
+        Job blockingJob = blockingRes.getWhoLockedLastResource(blockedJob);
+        if(blockingJob == null)
+        {
+            blockingJob = blockingRes.getResource(0).whoLocked();
+        }
+        blockingJob.inheritBlockedJobPriority(blockedJob);
+        blockingRes.blockedJob(blockedJob);
     }
 }
-

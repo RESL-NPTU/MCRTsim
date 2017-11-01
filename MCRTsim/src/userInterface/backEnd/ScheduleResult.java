@@ -5,16 +5,17 @@
  */
 package userInterface.backEnd;
 
-import java.util.Comparator;
+import ResultSet.MissDeadlineInfo;
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
-import simulation.Core;
-import simulation.DataSetting;
-import simulation.Result;
-import simulation.CoreStatus;
-import simulation.Task;
+import SystemEnvironment.Core;
+import WorkLoadSet.DataSetting;
+import ResultSet.ResultSet;
+import ResultSet.SchedulingInfo;
+import mcrtsim.Definition;
+import WorkLoad.Task;
+import static mcrtsim.Definition.magnificationFactor;
 
 /**
  *
@@ -23,7 +24,6 @@ import simulation.Task;
 public class ScheduleResult 
 {
     public ResultViewer parent;
-    
     public boolean isMultiCore;
     public boolean isCoreTimeLine;
     private int singleTaskGap = 200;
@@ -31,9 +31,10 @@ public class ScheduleResult
     private double simulationTime; //排程時間
     private Dictionary<String, TaskTimeLine> taskTimeLines; //Dictionary<ID, Task時間軸>
     private Dictionary<String, CoreTimeLine> coreTimeLines; //Dictionary<ID, Core時間軸>
-    private Result[][] atbSet;//儲存記錄佇列
+    private SchedulingInfo[][] atbSet;//儲存記錄佇列
     private int baseunit = 40; //比例尺
     private int accuracy = 100; //時間精準度
+    private ResultSet resultSet;
     
     public ScheduleResult(ResultViewer rv) 
     {
@@ -41,67 +42,75 @@ public class ScheduleResult
         this.isMultiCore = this.parent.getCores().size() > 1 ? true : false;
         this.taskTimeLines = new Hashtable<String, TaskTimeLine>();
         this.coreTimeLines = new Hashtable<String, CoreTimeLine>();
-        this.simulationTime = this.parent.parent.getDataSetting().getProcessor().getSimulator().getSimulationTime() / 100000.0; 
+        this.resultSet = this.parent.parent.parent.getSimulationViewer().getSimulator().getResultSet();
+        this.simulationTime = (double)this.parent.parent.parent.getSimulationViewer().getSimulationTime() / magnificationFactor;
     }
     
     public void startCoreTimeLineSchedule()
     {
+        
         this.isCoreTimeLine = true;
         DataSetting ds = this.parent.parent.getDataSetting();
         
-        for(int i = 0; i < ds.getProcessor().getCores().size() ; i++)
+        for(int i = 0; i < ds.getProcessor().getAllCore().size() ; i++)
         {
            String id = String.valueOf(ds.getProcessor().getCore(i).getID());
            coreTimeLines.put(id , new CoreTimeLine(this, i, id));
         }
 
-        this.atbSet = new Result[ds.getProcessor().getCores().size()][(int)(this.simulationTime * accuracy)+1];
+        this.atbSet = new SchedulingInfo[ds.getTaskSet().size()][(int)(this.simulationTime * accuracy)+1];
 
         for(Core core : this.parent.getCores())
         {
-            Vector<Result> record = core.getResult();
+            Vector<SchedulingInfo> schedulingInfoSet = core.getSchedulingInfoSet();
 
-            for (int i=0;i<record.size()-1;i++)
+            for (int i=0;i<schedulingInfoSet.size()-1;i++)
             {
-                for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
+                for(int j=Double.valueOf(schedulingInfoSet.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(schedulingInfoSet.get(i).getEndTime() * accuracy).intValue();j++)
                 {
-                    this.atbSet[core.getID()-1][j] = record.get(i);
+                    this.atbSet[core.getID()-1][j] = schedulingInfoSet.get(i);
                 }
             }
             //addfinallyResult---VVVV
-            for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
+            for(int j = (int)(schedulingInfoSet.get(schedulingInfoSet.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
             {
-                this.atbSet[core.getID()-1][j] = record.get(record.size()-1);
+                this.atbSet[core.getID()-1][j] = schedulingInfoSet.get(schedulingInfoSet.size()-1);
             }
+            
         }
         
         CoreTimeLine ctl;
         
         for(Core core : this.parent.getCores())
         {
-            for(Result curResult : core.getResult())
+            for(SchedulingInfo curResult : core.getSchedulingInfoSet())
             {  
-                if(curResult.getStatus() == CoreStatus.EXECUTION )
+                
+                if(curResult.getCoreStatus() == Definition.CoreStatus.EXECUTION )
                 {
                     ctl = this.coreTimeLines.get(String.valueOf(core.getID()));
                     ctl.addExecution(new TaskExecution(curResult));
                 }
-                else if(curResult.getStatus() == CoreStatus.IDLE)
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.IDLE)
                 {
 
                 }
-                else if(curResult.getStatus() == CoreStatus.WRONG)
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.WAIT)
                 {
                     ctl = this.coreTimeLines.get(String.valueOf(core.getID()));
                     ctl.addExecution(new TaskExecution(curResult));
                 }
-                else if(curResult.getStatus() == CoreStatus.WAIT)
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.CONTEXTSWITCH)
                 {
                     ctl = this.coreTimeLines.get(String.valueOf(core.getID()));
                     ctl.addExecution(new TaskExecution(curResult));
+                }
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.MIGRATION)
+                {
+                    ctl = this.coreTimeLines.get(String.valueOf(core.getID()));
+                    ctl.addExecution(new TaskExecution(curResult)); 
                 }
             }
-        
         }
     }
     
@@ -109,58 +118,66 @@ public class ScheduleResult
     {
         this.isCoreTimeLine = false;
         DataSetting ds = this.parent.parent.getDataSetting();
-        
+       
         if(this.isMultiCore)
         {
             for(int i = 0; i < ds.getTaskSet().size() ; i++)
             {
-               String id = String.valueOf(ds.getTaskSet(i).getID());
+               String id = String.valueOf(ds.getTask(i).getID());
                taskTimeLines.put(id , new TaskTimeLine(this, i, id));
             }
             
-            this.atbSet = new Result[ds.getTaskSet().size()][(int)(this.simulationTime * accuracy)+1];
+            this.atbSet = new SchedulingInfo[ds.getTaskSet().size()][(int)(this.simulationTime * accuracy)+1];
             
-            Result nullResult = new Result();
+            SchedulingInfo nullSInfo = new SchedulingInfo();
             for(Task task : ds.getTaskSet())
             {
-                for(int j = 0 ; j<(int)(this.simulationTime * accuracy)+1;j++)
-                this.atbSet[task.getID()-1][j] = nullResult;
+                
+                for(int j=0;j<Double.valueOf(this.simulationTime * accuracy).intValue()+1;j++)
+                {
+                    this.atbSet[task.getID()-1][j] = nullSInfo;
+                }
             }
+            
             
             for(Core core : this.parent.getCores())
             {
-                Vector<Result> record = core.getResult();
+                Vector<SchedulingInfo> schedulingInfoSet = core.getSchedulingInfoSet();
                 
-                for (int i=0;i<record.size()-1;i++)
+
+                for (int i=0;i<schedulingInfoSet.size()-1;i++)
                 {
-                    for(int j=Double.valueOf(record.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(record.get(i).getEndTime() * accuracy).intValue();j++)
+                    if(schedulingInfoSet.get(i).getJob() != null)
                     {
-                        if(record.get(i).getJob()!=null)
-                            this.atbSet[record.get(i).getJob().getTask().getID()-1][j] = record.get(i);
+                        for(int j=Double.valueOf(schedulingInfoSet.get(i).getStartTime() * accuracy).intValue();j<Double.valueOf(schedulingInfoSet.get(i).getEndTime() * accuracy).intValue();j++)
+                        {
+                            this.atbSet[schedulingInfoSet.get(i).getJob().getParentTask().getID()-1][j] = schedulingInfoSet.get(i);
+                        }
                     }
                 }
                 //addfinallyResult---VVVV
-                for(int j = (int)(record.get(record.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
+                for(int j = (int)(schedulingInfoSet.get(schedulingInfoSet.size()-1).getStartTime() * accuracy);j <= (int)(this.simulationTime * accuracy) ;j++)
                 {
-                    if(record.get(record.size()-1).getJob()!=null)
-                        this.atbSet[record.get(record.size()-1).getJob().getTask().getID()-1][j] = record.get(record.size()-1);
+                    if(schedulingInfoSet.get(schedulingInfoSet.size()-1).getJob() != null)
+                    {
+                        this.atbSet[schedulingInfoSet.get(schedulingInfoSet.size()-1).getJob().getParentTask().getID()-1][j] = schedulingInfoSet.get(schedulingInfoSet.size()-1);
+                    }
                 }
+                
             }
         }
         else
         {
             Core core = this.parent.getCore(0);
-            Vector<Result> record = core.getResult();
+            Vector<SchedulingInfo> record = core.getSchedulingInfoSet();
             
-            for(int i = 0;i < ds.getTaskSet().size(); i++)
-                   // core.getTaskSet().size() ; i++)
+            for(int i = 0; i < ds.getTaskSet().size() ; i++)
             {
-               String id = String.valueOf(ds.getTaskSet(i).getID());
-                       //core.getTaskSet(i).getID());
+               String id = String.valueOf(ds.getTask(i).getID());
                taskTimeLines.put(id , new TaskTimeLine(this, i, id));
             }
             
-            this.atbSet = new Result[1][(int)(this.simulationTime * accuracy)+1];
+            this.atbSet = new SchedulingInfo[1][(int)(this.simulationTime * accuracy)+1];
            
             for (int i=0;i<record.size()-1;i++)
             {
@@ -178,79 +195,61 @@ public class ScheduleResult
         
         TaskTimeLine ttl;
         
-        
         for(Core core : this.parent.getCores())
         {
-            for(Result curResult : core.getResult())
+            for(SchedulingInfo curResult : core.getSchedulingInfoSet())
             {  
-                if(curResult.getStatus() == CoreStatus.EXECUTION )
+                if(curResult.getCoreStatus() == Definition.CoreStatus.EXECUTION )
                 {
-                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getTask().getID()));
+                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getParentTask().getID()));
                     ttl.addExecution(new TaskExecution(curResult));
                 }
-                else if(curResult.getStatus() == CoreStatus.IDLE)
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.IDLE)
                 {
-
-                }
-                else if(curResult.getStatus() == CoreStatus.WRONG)
-                {
-                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getTask().getID()));
-                    ttl.addExecution(new TaskExecution(curResult));
-                }
-                else if(curResult.getStatus() == CoreStatus.WAIT)
-                {
-                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getTask().getID()));
-                    ttl.addExecution(new TaskExecution(curResult));
-                }
-            }
-        }
-        
                 
-        Vector<TaskTimeLine> TTL = new Vector<TaskTimeLine>();
-        
-        Enumeration<String> keys= this.taskTimeLines.keys();
-        
-        int size = this.taskTimeLines.size();
-        for(int i=0;i<size;i++)//移除空的TaskTimeLine
-        {
-            String key = keys.nextElement();
-            TaskTimeLine task = this.taskTimeLines.get(key);
-            if(task.getExecutionSize()>0)
-            {
-                TTL.add(task);
-            }
-            else 
-            {
-                this.taskTimeLines.remove(key);
+                }
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.WAIT)
+                {
+                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getParentTask().getID()));
+                    ttl.addExecution(new TaskExecution(curResult));
+                }
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.CONTEXTSWITCH)
+                {
+                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getParentTask().getID()));
+                    ttl.addExecution(new TaskExecution(curResult));
+                }
+                else if(curResult.getCoreStatus() == Definition.CoreStatus.MIGRATION)
+                {
+                    ttl = this.taskTimeLines.get(String.valueOf(curResult.getJob().getParentTask().getID()));
+                    ttl.addExecution(new TaskExecution(curResult));
+                }
             }
         }
         
-        TTL.sort//排序
-        (
-            new Comparator<TaskTimeLine>()
-            {
-                public int compare(TaskTimeLine t1, TaskTimeLine t2)
-                {
-                    if(t1.ID > t2.ID)
-                    {
-                        return 1;
-                    }
-                    else if(t1.ID <= t2.ID)
-                    {
-                        return -1;
-                    }
-                    return 0;
-                }
-            }
-        );
-        
-        for(int i=0;i<TTL.size();i++)//重新TaskTimeLine設置起始座標
+        for(MissDeadlineInfo missDeadlineInfo : this.resultSet.getMissDeadlineInfoSet())
         {
-            TTL.get(i).setPoint(i);
+            ttl = this.taskTimeLines.get(String.valueOf(missDeadlineInfo.getMissTask().getID()));
+            ttl.addExecution(new TaskExecution(missDeadlineInfo));
+        }
+        
+        this.removeNeedlessTaskTimeLine();
+    }
+    
+    private void removeNeedlessTaskTimeLine()
+    {
+        DataSetting ds = this.parent.parent.getDataSetting();
+        for(int i = 0; i < ds.getTaskSet().size() ; i++)
+        {
+            String id = String.valueOf(ds.getTask(i).getID());
+           
+            if(taskTimeLines.get(id).getExecutionNumber() < 1)
+            {
+                this.taskTimeLines.remove(taskTimeLines.get(id));
+            }
         }
     }
     
-    public Result getAtbSet(int taskID , int time)
+    public SchedulingInfo getAtbSet(int taskID , int time)
     {
         return this.atbSet[taskID][time];
     }

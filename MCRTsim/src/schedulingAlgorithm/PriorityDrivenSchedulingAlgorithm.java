@@ -5,8 +5,10 @@
  */
 package schedulingAlgorithm;
 
-import simulation.Job;
-import simulation.TaskSet;
+import WorkLoadSet.JobQueue;
+import WorkLoadSet.TaskSet;
+import mcrtsim.Definition.PriorityType;
+import mcrtsim.Definition.SchedulingType;
 
 /**
  *
@@ -14,32 +16,50 @@ import simulation.TaskSet;
  */
 public class PriorityDrivenSchedulingAlgorithm
 {
-    private String algorithmName;
-    public boolean isGlobalScheduling = false;
+    private String name;
+    private SchedulingType schedulingType;
+    private PriorityType priorityType;
     
     public PriorityDrivenSchedulingAlgorithm()
     {
-        
+        this.name = null;
+        this.priorityType = null;
+        this.schedulingType = null;
     }
     
-    public void setName(String name)
+    public void setName(String n)
     {
-        this.algorithmName = name;
+        this.name = n;
+    }
+    
+    public void setSchedulingType(SchedulingType t)
+    {
+        this.schedulingType = t;
+    }
+    
+    public void setPriorityType(PriorityType t)
+    {
+        this.priorityType = t;
     }
     
     public String getName()
     {
-        return this.algorithmName;
+        return this.name;
     }
     
-    public void setPriority(TaskSet ts)
+    public SchedulingType getSchedulingType()
     {
-        
+        return this.schedulingType;
     }
     
-    public void setPriority(Job j)
+    public PriorityType getPriorityType()
     {
-        
+        return this.priorityType;
+    }
+    
+    public void calculatePriority(TaskSet ts){}
+    public JobQueue calculatePriority(JobQueue jq)
+    {
+        return null;
     }
 }
-

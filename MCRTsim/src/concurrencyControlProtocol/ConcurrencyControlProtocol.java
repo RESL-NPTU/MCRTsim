@@ -5,12 +5,10 @@
  */
 package concurrencyControlProtocol;
 
-import simulation.DataSetting;
-import simulation.Job;
-import simulation.LockInfo;
-import simulation.Resources;
-import simulation.Task;
-import simulation.TaskSet;
+import SystemEnvironment.Controller;
+import SystemEnvironment.Processor;
+import WorkLoad.Job;
+import WorkLoad.SharedResource;
 
 /**
  *
@@ -18,54 +16,57 @@ import simulation.TaskSet;
  */
 public abstract class ConcurrencyControlProtocol
 {
-    private String methodName;
-    private DataSetting dataSetting;
-    private boolean setPIP;
+    private String name;
+    private boolean isPIP;
+    private Controller parentController;
     
-    public ConcurrencyControlProtocol(DataSetting ds)
+    public ConcurrencyControlProtocol()
     {
-        this.dataSetting = ds;
-        this.setPIP = false;
+        this.name = null;
+        this.isPIP = false;
+        this.parentController = null;
     }
     
-    public void setName(String name)
+    /*Operating*/
+    public abstract void preAction(Processor p);
+    public abstract void jobArrivesAction(Job j);
+    public abstract void jobPreemptedAction(Job preemptedJob , Job newJob);//preemptedJob 被搶先的工作(Lower Priority Job)，newJob搶先的工作(Higher Priority Job)
+    public abstract void jobExecuteAction(Job j);
+    public abstract SharedResource jobLockAction(Job j, SharedResource r);
+    public abstract void jobBlockedAction(Job blockedJob,SharedResource blockingRes);
+    public abstract void jobUnlockAction(Job j, SharedResource r);
+    public abstract void jobCompletedAction(Job j);
+    public abstract void jobDeadlineAction(Job j);
+    
+    /*SetValue*/
+    public void setName(String n)
     {
-        this.methodName = name;
+        this.name = n;
     }
     
+    public void setPIP(boolean b)
+    {
+        this.isPIP = b;
+    }
+    
+    public void setParentController(Controller c)
+    {
+        this.parentController = c;
+    }
+    
+    /*GetValue*/
     public String getName()
     {
-        return this.methodName;
-    }
-    
-    public void setDataSetting(DataSetting ds)
-    {
-        this.dataSetting = ds;
-    }
-    
-    public DataSetting getDataSetting()
-    {
-        return this.dataSetting;
-    }
-    
-    public void setPIP(boolean is)
-    {
-        this.setPIP = is;
+        return this.name;
     }
     
     public boolean isPIP()
     {
-        return this.setPIP;
+        return this.isPIP;
     }
     
-    public abstract boolean leadLock(Job j);
-    
-    public abstract boolean lock(Job j, Resources r);
-    
-    public abstract void unlock(Job j, LockInfo l);
-    
-    public abstract void jobCompleted(Job j);
-    
-    public abstract double getBlockingTime(TaskSet ts,Task t);
+    public Controller getParentController()
+    {
+        return this.parentController;
+    }
 }
-

@@ -1,50 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Workload Frequency="300" ResourceNumber="5" TaskNumber="2" Utilization="0.872">
-    <Resources ID="1">
-        <ResourceAmount>1</ResourceAmount>
-    </Resources>
-    <Resources ID="2">
-        <ResourceAmount>1</ResourceAmount>
-    </Resources>
-    <Resources ID="3">
-        <ResourceAmount>1</ResourceAmount>
-    </Resources>
-    <Resources ID="4">
-        <ResourceAmount>1</ResourceAmount>
-    </Resources>
-    <Resources ID="5">
-        <ResourceAmount>1</ResourceAmount>
-    </Resources>
-    <Task ID="1">
-        <EnterTime>0.0</EnterTime>
-        <Period>7.653</Period>
-        <RelativeDeadline>7.653</RelativeDeadline>
-        <ComputationAmount>4.403</ComputationAmount>
-        <CriticalSection>
-            <Resources>3</Resources>
-            <StartTime>2.592</StartTime>
-            <EndTime>4.243</EndTime>
-        </CriticalSection>
-        <CriticalSection>
-            <Resources>5</Resources>
-            <StartTime>3.364</StartTime>
-            <EndTime>3.67</EndTime>
-        </CriticalSection>
-    </Task>
-    <Task ID="2">
-        <EnterTime>0.0</EnterTime>
-        <Period>9.082</Period>
-        <RelativeDeadline>9.082</RelativeDeadline>
-        <ComputationAmount>2.694</ComputationAmount>
-        <CriticalSection>
-            <Resources>2</Resources>
-            <StartTime>1.199</StartTime>
-            <EndTime>2.172</EndTime>
-        </CriticalSection>
-        <CriticalSection>
-            <Resources>3</Resources>
-            <StartTime>1.079</StartTime>
-            <EndTime>1.135</EndTime>
-        </CriticalSection>
-    </Task>
-</Workload>
+<workload baseSpeed="300" numResource="3" numTask="2">
+    <resources ID="1" quantity="1"/>
+    <resources ID="2" quantity="1"/>
+    <resources ID="3" quantity="1"/>
+    <task ID="1">
+        <arrivalTime>0.0</arrivalTime>
+        <period>6.19</period>
+        <relativeDeadline>6.19</relativeDeadline>
+        <computationAmount>3.07</computationAmount>
+    </task>
+    <task ID="2">
+        <arrivalTime>0.0</arrivalTime>
+        <period>7.24</period>
+        <relativeDeadline>7.24</relativeDeadline>
+        <computationAmount>2.95</computationAmount>
+    </task>
+</workload>

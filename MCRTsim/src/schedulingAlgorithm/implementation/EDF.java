@@ -5,27 +5,40 @@
  */
 package schedulingAlgorithm.implementation;
 
-import schedulingAlgorithm.DynamicPrioritySchedulingAlgorithm;
-import simulation.Job;
-import simulation.Priority;
+import WorkLoad.Job;
+import WorkLoad.Priority;
+import WorkLoadSet.JobQueue;
+import WorkLoadSet.TaskSet;
+import mcrtsim.Definition;
+import schedulingAlgorithm.SingleCoreSchedulingAlgorithm;
 
 /**
  *
  * @author ShiuJia
  */
-public class EDF extends DynamicPrioritySchedulingAlgorithm
-{    
+public class EDF extends SingleCoreSchedulingAlgorithm
+{
     public EDF()
     {
         this.setName("Earliest Deadline First Scheduling Algorithm");
-        this.isGlobalScheduling = false;
+        this.setPriorityType(Definition.PriorityType.Dynamic);
     }
-    
+
     @Override
-    public void setPriority(Job j)
+    public JobQueue calculatePriority(JobQueue jq)
     {
-        j.setOriginalPriority(new Priority(j.getAbsoluteDeadline()));
+        JobQueue newJQ = new JobQueue();
+        Job j;
+        while((j = jq.poll()) != null)
+        {
+            j.setCurrentProiority(new Priority(j.getAbsoluteDeadline()));
+            newJQ.add(j);
+        }
+        return newJQ;
+    }
+
+    @Override
+    public void calculatePriority(TaskSet ts) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
-
-

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<workload baseSpeed="1000" numResource="0" numTask="2">
+    <task ID="1" type="periodic">
+        <arrivalTime>0.0</arrivalTime>
+        <period>10.0</period>
+        <relativeDeadline>10.0</relativeDeadline>
+        <computationAmount>4</computationAmount>
+    </task>
+    <task ID="2" type="periodic">
+        <arrivalTime>0</arrivalTime>
+        <period>10.0</period>
+        <relativeDeadline>10.0</relativeDeadline>
+        <computationAmount>4</computationAmount>
+    </task>
+</workload>

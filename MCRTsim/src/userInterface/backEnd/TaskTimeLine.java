@@ -10,7 +10,9 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import simulation.Task;
+import WorkLoad.Task;
+import mcrtsim.Definition.CoreStatus;
+import static mcrtsim.Definition.magnificationFactor;
 
 /**
  *
@@ -123,7 +125,52 @@ public class TaskTimeLine
 
         for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("W"))
+            if(te.getStatus() == CoreStatus.MIGRATION)
+            {
+                
+            }
+            else if(te.getStatus() == CoreStatus.CONTEXTSWITCH)
+            {
+                g.setColor(Color.LIGHT_GRAY);
+                g.fillRect((int)(o.x + te.getStartTime() * baseunit ), o.y - (this.taskHeight/2), (int)(te.getExecutionTime() * baseunit), this.taskHeight/2);
+                g.setColor(Color.black);
+                if(this.parent.isMultiCore)
+                {
+                    g.drawRect((int)(o.x + te.getStartTime() * baseunit ), yHeight - 16, (int)(te.getExecutionTime() * baseunit), 16);
+                    g.drawLine((int)(o.x + te.getStartTime() * baseunit ), yHeight, (int)(o.x + te.getStartTime() * baseunit), yHeight + 5);
+                    
+                    g.setColor(resourceColor[19 - (te.getCoreID()%19)-1]);
+                    g.fillRect((int)(o.x + te.getStartTime() * baseunit)+1, yHeight - 15, (int)(te.getExecutionTime() * baseunit) - 1, 14);
+                    g.setColor(reverseColor(resourceColor[19 - (te.getCoreID()%19)-1]));
+    
+                    char[] data = String.valueOf(te.getCoreID()).toCharArray();
+
+                    if((int)(te.getExecutionTime() * baseunit) > data.length * 8)
+                    {
+                        g.drawChars(data, 0, data.length, (int)(o.x + te.getStartTime() * baseunit) + 2, yHeight - 2);
+                    }
+                
+                    g.setColor(Color.black);
+                }
+                
+                DecimalFormat df = new DecimalFormat("##.00");
+                double time = Double.parseDouble(df.format(te.getStartTime()));
+                
+                if(((int)(time*10)%10)!=0)
+                {
+                    g.drawString(""+ time, (int)(o.x - 4 + te.getStartTime() * baseunit), o.y + 40);
+                    g.drawLine((int)(o.x + te.getStartTime() * baseunit), o.y, (int)(o.x + te.getStartTime() * baseunit), o.y + 25);
+                }
+
+                time = Double.parseDouble(df.format(te.getEndTime()));
+
+                if(( (int)(time * 10) % 10) != 0)
+                {
+                    g.drawString(""+ time, (int)(o.x - 4 + te.getEndTime() * baseunit), o.y + 40);
+                    g.drawLine((int)(o.x + te.getEndTime() * baseunit), o.y, (int)(o.x + te.getEndTime() * baseunit), o.y + 25);
+                }
+            }
+            else if(te.getStatus() == CoreStatus.WAIT)
             {
                 g.fillRect((int)(o.x + te.getStartTime() * baseunit ), o.y - this.taskHeight, (int)(te.getExecutionTime() * baseunit), this.taskHeight);
                 
@@ -163,13 +210,20 @@ public class TaskTimeLine
                     g.drawLine((int)(o.x + te.getEndTime() * baseunit), o.y, (int)(o.x + te.getEndTime() * baseunit), o.y + 25);
                 }
             }
-            else if(te.getStatus().equals("X"))
+            else if(te.getStatus() == CoreStatus.WRONG)
             {
                 g.setColor(Color.red);
-                g.drawString("X", (int) (o.x - 3 + te.getStartTime() * baseunit), o.y - 75);
+                
+                for(int i = 0 ; i<3 ; i++)
+                {
+                    g.drawString("X", (int)(o.x - 3 + te.getStartTime() * baseunit), o.y - this.taskHeight - i);
+                }
+                
                 g.setColor(Color.BLACK);
+               // System.out.println("!! MissDeadline !!" + te.getStartTime());
+        
             }
-            else if( te.getStatus().equals("E") )
+            else if( te.getStatus() == CoreStatus.EXECUTION )
             {
                 g.drawRect((int)(o.x + te.getStartTime() * baseunit ), o.y - this.taskHeight, (int)(te.getExecutionTime() * baseunit), this.taskHeight);
                 
@@ -223,10 +277,10 @@ public class TaskTimeLine
         int baseunit = this.parent.getBaseunit();
         double finalTime = this.parent.getFinalTime();
         Task task = this.parent.parent.parent.getDataSetting().getTaskSet().getTask(this.ID-1);
-        double curPeriod = 0 + (double)(task.getEnterTime() / 100000.0);
-        double curDeadline = curPeriod - (double)((task.getPeriod() - task.getRelativeDeadline()) / 100000.0);
+        double curPeriod = 0 + ((double)task.getEnterTime() / magnificationFactor);
+        double curDeadline = curPeriod - ((double)(task.getPeriod() - task.getRelativeDeadline()) / magnificationFactor);
         
-        for(int j = 0 ; j < (finalTime / (double)(task.getPeriod() / 100000.0)) ; j++)
+        for(int j = 0 ; j < (finalTime / ((double)task.getPeriod() / magnificationFactor)) ; j++)
         {  
             if(curPeriod <= finalTime)
             {
@@ -240,8 +294,8 @@ public class TaskTimeLine
                 }
             }
 
-            curPeriod +=  (double)(task.getPeriod() / 100000.0);
-            curDeadline = curPeriod - (double)((task.getPeriod() - task.getRelativeDeadline()) / 100000.0);
+            curPeriod +=  ((double)task.getPeriod() / magnificationFactor);
+            curDeadline = curPeriod - ((double)(task.getPeriod() - task.getRelativeDeadline()) / magnificationFactor);
             
             if(curDeadline <= finalTime)
             {
@@ -261,7 +315,7 @@ public class TaskTimeLine
     {
         for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("E"))
+            if(te.getStatus() == CoreStatus.EXECUTION)
             {
                 int i=0;
                 for(ResourcePanel reP : te.getResourcePanels())
@@ -282,7 +336,7 @@ public class TaskTimeLine
         
         for(TaskExecution te : executions)
         {
-            if(te.getStatus().equals("E"))
+            if(te.getStatus() == CoreStatus.EXECUTION)
             {
                 int i=0;
                 for(ResourcePanel reP : te.getResourcePanels())
@@ -302,14 +356,14 @@ public class TaskTimeLine
                     }
                     else if((int)((te.getExecutionTime() * baseunit) / 8) > 1)
                     {
-                            g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
+                        g.drawChars(data, 0, (int)((te.getExecutionTime() * baseunit) / 8), (int)(o.x + te.getStartTime() * baseunit) + 2, o.y - i * this.resourceHeight + this.resourceHeight - 2);
                     }
+                    
                     g.setColor(Color.BLACK);
                 }
             }
         }
     }
-
 
     public Color reverseColor(Color color)
     {  
@@ -323,15 +377,10 @@ public class TaskTimeLine
         Color newColor = new Color(r_,g_,b_);  
 
         return newColor;  
-    }
-    
-    public int getExecutionSize()
+    }  
+
+    public int getExecutionNumber()
     {
         return this.executions.size();
-    }
-    
-    public void setPoint(int i)
-    {
-        o = new Point(100, 200 + i * this.parent.getTaskGap());
     }
 }

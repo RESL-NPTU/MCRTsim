@@ -5,53 +5,66 @@
  */
 package concurrencyControlProtocol.implementation;
 
+import SystemEnvironment.Processor;
+import WorkLoad.Job;
+import WorkLoad.SharedResource;
 import concurrencyControlProtocol.ConcurrencyControlProtocol;
-import simulation.DataSetting;
-import simulation.Job;
-import simulation.LockInfo;
-import simulation.Resources;
-import simulation.Task;
-import simulation.TaskSet;
 
 /**
  *
- * @author YC
+ * @author ShiuJia
  */
 public class None extends ConcurrencyControlProtocol
 {
-
-    public None(DataSetting ds) 
+    public None()
     {
-        super(ds);
         this.setName("None");
     }
 
     @Override
-    public boolean leadLock(Job j) 
+    public void preAction(Processor p)
     {
-        return true;
+        
     }
 
     @Override
-    public boolean lock(Job j, Resources r) 
-    {
-        return true;
-    }
-
-    @Override
-    public void unlock(Job j, LockInfo l) 
+    public void jobArrivesAction(Job j)
     {
     }
 
     @Override
-    public void jobCompleted(Job j) 
+    public  void jobPreemptedAction(Job preemptedJob , Job newJob)
     {
-    }
-
-    @Override
-    public double getBlockingTime(TaskSet ts, Task t) 
-    {
-        return 0;
     }
     
+    @Override
+    public void jobExecuteAction(Job j)
+    {
+    }
+
+    @Override
+    public SharedResource jobLockAction(Job j, SharedResource r)
+    {
+        return null;
+    }
+
+    @Override
+    public void jobUnlockAction(Job j, SharedResource r)
+    {
+    }
+
+    @Override
+    public void jobCompletedAction(Job j)
+    {
+    }
+
+    @Override
+    public void jobDeadlineAction(Job j)
+    {
+    }
+
+    @Override
+    public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
+    {
+    }
 }

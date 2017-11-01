@@ -5,16 +5,18 @@
  */
 package userInterface.frontEnd;
 
+import ResultSet.SchedulingInfo;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.text.DecimalFormat;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
-import simulation.Result;
+import static mcrtsim.Definition.magnificationFactor;
+import mcrtsim.MCRTsimMath;
+//import simulation.Result;
 import userInterface.UserInterface;
 import userInterface.backEnd.MouseTimeLine;
 
@@ -41,11 +43,13 @@ public class AttributeViewer extends JPanel
         init();
     }
 
-    public void setAtbData(Result rd)
+    public void setAtbData(SchedulingInfo schedulingInfo)
     {
+//        DecimalFormat df = new DecimalFormat("##.00000");
+        MCRTsimMath math = new MCRTsimMath();
         try
         {
-            this.CoreID="" + rd.getCore().getID();
+            this.CoreID="" + schedulingInfo.getCore().getID();
         }
         catch (Exception ex)
         {
@@ -54,10 +58,10 @@ public class AttributeViewer extends JPanel
         
         try
         {
-            this.TaskID="" + rd.getJob().getTask().getID() + " (" + (double)rd.getJob().getTask().getComputationAmount()/100000
-                    + "," + (double)rd.getJob().getTask().getPeriod()/100000+")";
-            this.JobMissDeadlineNum = ""+rd.getJobMissDeadlineNum();
-            this.JobCompletedNum = ""+rd.getJobCompletedNum();
+            this.TaskID="" + schedulingInfo.getJob().getParentTask().getID()+" (" + (double)schedulingInfo.getJob().getParentTask().getComputationAmount()/magnificationFactor 
+                    + "," + schedulingInfo.getJob().getParentTask().getPeriod()/magnificationFactor+")";
+            this.JobMissDeadlineNum = ""+schedulingInfo.getJobMissDeadlineNum();
+            this.JobCompletedNum = ""+schedulingInfo.getJobCompletedNum();
         }
         catch (Exception ex)
         {
@@ -68,10 +72,10 @@ public class AttributeViewer extends JPanel
         
         try
         {
-            this.JobID="" + rd.getJob().getID();
-            this.JobStatus=""+rd.getJob().getStatus() + " at " + rd.getJob().getTimeOfStatus() + " (s)";
-            this.responseTime=""+rd.getJob().getResponseTime()/100000;
-            this.pendingTime=""+rd.getJob().getPendingTime()/100000;
+            this.JobID="" + schedulingInfo.getJob().getID();
+            this.JobStatus=""+schedulingInfo.getJob().getStatusString() + " at " + schedulingInfo.getJob().getTimeOfStatus() + " (s)";
+            this.responseTime=""+math.changeDecimalFormat((double)schedulingInfo.getJob().getResponseTime()/magnificationFactor);
+            this.pendingTime=""+math.changeDecimalFormat((double)schedulingInfo.getJob().getPendingTime()/magnificationFactor);
         }
         catch (Exception ex)
         {
@@ -80,49 +84,40 @@ public class AttributeViewer extends JPanel
             this.responseTime="Null";
             this.pendingTime="Null";
         }
-        
-        
-        try
-        {
-            this.StartTime="" + rd.getStartTime()+" (s)";
-            this.EndTime="" + rd.getEndTime()+" (s)";
-        }
-        catch (Exception ex)
-        {
-            this.StartTime="Null";
-            this.EndTime="Null";
-        }
+
+        this.StartTime="" + schedulingInfo.getStartTime()+" (s)" ;
+        this.EndTime="" + schedulingInfo.getEndTime()+" (s)" ;
         
         try
         {
-            this.Speed="" + rd.getFrequencyOfSpeed() + "_(" + rd.getNormalizationOfSpeed() + ")";
+            this.Speed="" + schedulingInfo.getUseSpeed() + "_(" + schedulingInfo.getNormalizationOfSpeed() + ")";
         }
         catch (Exception ex)
         {
             this.Speed="Null";
         }
-        DecimalFormat df = new DecimalFormat("##.00000");
+        
         try
         {
-            this.PowerConsumption = "" + Double.parseDouble(df.format(rd.getTotalPowerConsumption())) + " (mW)";
-
-            this.AveragePowerConsumption = ""+Double.parseDouble(df.format(rd.getAveragePowerConsumption())) + " (mW/s)";
-            this.CoreStatus="" + rd.getStatus();
+            this.PowerConsumption = ""+math.changeDecimalFormat(schedulingInfo.getTotalPowerConsumption()) +" (mW)";//+ rd.getTotalPowerConsumption() + " (mW)";
+            this.AveragePowerConsumption = ""+math.changeDecimalFormat(schedulingInfo.getAveragePowerConsumption())+ " (mW/s)";
+            this.CoreStatus="" + schedulingInfo.getCoreStatus();
         }
         catch (Exception ex)
         {
-            this.PowerConsumption ="Null";
-            this.AveragePowerConsumption ="Null";
-            this.CoreStatus="Null";
+             this.PowerConsumption = ""+"Null";
+            this.AveragePowerConsumption = ""+"Null";
+            this.CoreStatus="" + "Null";   
         }
+        
         String str = "";
-        if (rd.getLockedResource().size() != 0)
+        if (schedulingInfo.getEnteredCriticalSectionSet().size() != 0)
         {
-            for (int i = 0; i < rd.getLockedResource().size(); i++)
+            for (int i = 0; i < schedulingInfo.getEnteredCriticalSectionSet().size(); i++)
             {
-                str = str + 'R' + rd.getLockedResource().get(i).getResources().getID() +
-                        "(" + rd.getLockedResource().get(i).getResource().getID() +"/" + 
-                        rd.getLockedResource().get(i).getResources().getResourcesAmount() +")" + "<br>";
+                str = str + 'R' + schedulingInfo.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() +
+                        "(" + schedulingInfo.getEnteredCriticalSectionSet().get(i).getResourceID() +"/" + 
+                        schedulingInfo.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getResourcesAmount() +")" + "<br>";
             }
         }
         else
@@ -130,6 +125,9 @@ public class AttributeViewer extends JPanel
             str = "Null";
         }
         this.LockedResource="<html>" + str + "<html>";
+        
+        int rowHeightScale = schedulingInfo.getEnteredCriticalSectionSet().size() > 1 ? schedulingInfo.getEnteredCriticalSectionSet().size()-1 : 0;
+        this.table.setRowHeight(17, 30 + 20*(rowHeightScale));
         
         table.getModel().setValueAt(this.StartTime,0,1);
         table.getModel().setValueAt(this.EndTime,1,1);
@@ -201,11 +199,13 @@ public class AttributeViewer extends JPanel
         this.add(scrollPane, BorderLayout.CENTER);
     }
 
+    //public JComboBox<Double> getTimeLineSet()
     public JComboBox<MouseTimeLine> getTimeLineSet()
     {
         return this.timeLineSet;
     }
     
+    //public void setTimeLineSet(JComboBox<Double> jb)
     public void setTimeLineSet(JComboBox<MouseTimeLine> jb)
     {
         this.toolBar.remove(this.timeLineSet);

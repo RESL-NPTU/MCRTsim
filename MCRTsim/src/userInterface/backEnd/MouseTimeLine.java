@@ -5,11 +5,11 @@
  */
 package userInterface.backEnd;
 
+import ResultSet.SchedulingInfo;
 import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
-import simulation.Result;
 
 /**
  *
@@ -19,14 +19,14 @@ public class MouseTimeLine extends JPanel
 {
     public TimeLineResult parent;
     private Double curTime;
-    private Result result; 
+    private SchedulingInfo result; 
     
     public MouseTimeLine ()
     {
        super(); 
     }
     
-    public MouseTimeLine (TimeLineResult rv, Double x, Result re)
+    public MouseTimeLine (TimeLineResult rv, Double x, SchedulingInfo re)
     {
         super();
         this.parent = rv;
@@ -37,7 +37,7 @@ public class MouseTimeLine extends JPanel
         {   
             try
             {
-                this.setBackground(this.parent.getResourceColor()[20 - re.getJob().getTask().getID()]);
+                this.setBackground(this.parent.getResourceColor()[20 - re.getJob().getParentTask().getID()]);
             }
             catch(Exception ex)
             {
@@ -45,8 +45,15 @@ public class MouseTimeLine extends JPanel
             }
         }
         else
-        {
-            this.setBackground(this.parent.getResourceColor()[20 - re.getCore().getID()]);
+        {   
+            try
+            {
+                this.setBackground(this.parent.getResourceColor()[20 - re.getCore().getID()]);
+            }
+            catch(Exception ex)
+            {
+                this.setBackground(Color.BLACK);
+            }
         }
         
         
@@ -78,10 +85,19 @@ public class MouseTimeLine extends JPanel
     
     public String toString()
     {
-        return this.curTime+ " , " +  result.getCore().getID();
+        String str = "";
+        if(result.getCore() == null)
+        {
+            str += this.curTime+ " , " + "Null";
+        }
+        else
+        {
+            str += this.curTime+ " , " +  result.getCore().getID();
+        }
+        return str;
     }
     
-    public Result getResult()
+    public SchedulingInfo getResult()
     {
         return this.result;
     }

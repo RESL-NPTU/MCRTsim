@@ -5,64 +5,30 @@
  */
 package schedulingAlgorithm.implementation;
 
-import java.util.Comparator;
-import schedulingAlgorithm.FixedPrioritySchedulingAlgorithm;
-import simulation.Priority;
-import simulation.Task;
-import simulation.TaskSet;
+import PartitionAlgorithm.PartitionAlgorithm;
+import SystemEnvironment.Core;
+import WorkLoadSet.JobQueue;
+import WorkLoadSet.TaskSet;
+import java.util.Vector;
+import schedulingAlgorithm.PartitionedSchedulingAlgorithm;
 
 /**
  *
  * @author ShiuJia
  */
-public class PDMS extends FixedPrioritySchedulingAlgorithm
+public class PDMS extends PartitionedSchedulingAlgorithm
 {
     public PDMS()
     {
-        this.setName("Partitioned Rate Monotonic Scheduling Algorithm");
-        this.isGlobalScheduling = false;
+        this.setName("Partitioned DMS");
     }
-
+    
     @Override
-    public void setPriority(TaskSet ts)
+    public void setCoresLocalSchedulingAlgorithm(Vector<Core> cores)
     {
-        TaskSet temp = new TaskSet();
-        temp.addAll(ts);
-        temp.sort
-        (
-            new Comparator<Task>()
-            {
-                public int compare(Task t1, Task t2)
-                {
-                    if(t1.getRelativeDeadline() < t2.getRelativeDeadline())
-                    {
-                        return -1;
-                    }
-                    else if(t1.getRelativeDeadline() >= t2.getRelativeDeadline())
-                    {
-                        return 1;
-                    }
-                    return 0;
-                }
-            }
-        );
-        
-       
-        int priorityValue = 1;
-        
-        ts.get(ts.indexOf(temp.get(0))).setPriority(new Priority(priorityValue));
-        
-        for(int i = 1; i < temp.size(); i++)
+        for(Core c : cores)
         {
-            if(temp.get(i).getRelativeDeadline() == temp.get(i-1).getRelativeDeadline())
-            {
-                ts.get(ts.indexOf(temp.get(i))).setPriority(new Priority(priorityValue));
-            }
-            else
-            {
-                ts.get(ts.indexOf(temp.get(i))).setPriority(new Priority(++priorityValue));
-            }
-            System.out.println(ts.indexOf(temp.get(i)));
+            c.setLocalSchedAlgorithm(new DMS());
         }
     }
 }

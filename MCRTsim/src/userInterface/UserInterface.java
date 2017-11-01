@@ -33,7 +33,7 @@ public class UserInterface
     
     private void initialize()
     {
-        this.frame = new JFrame("MCRTSim v0.1");
+        this.frame = new JFrame("MCRTsim v2.0");
         this.frame.setBounds(100, 100, 1000, 600);
         this.frame.setMinimumSize(new Dimension(1000, 600));
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -42,23 +42,24 @@ public class UserInterface
         
         splitPane = new JSplitPane();
         this.frame.getContentPane().add(splitPane);
-        splitPane.setOrientation(1); //左右 切割方法
-        splitPane.setContinuousLayout(false);//??
+        splitPane.setOrientation(1);
+        splitPane.setContinuousLayout(false);
         simView = new SimulationViewer(this);
         splitPane.setTopComponent(simView);
         splitPane.setDividerLocation(splitPane.getMinimumDividerLocation());
         
         result = new InfoWin(this);
         bottomSplitPane = new JSplitPane();
-        bottomSplitPane.setOrientation(1);//左右 切割方法
+        bottomSplitPane.setOrientation(1);
         bottomSplitPane.setContinuousLayout(false);
-
+       
+        
         splitPane.setBottomComponent(bottomSplitPane);
         bottomSplitPane.setTopComponent(result);
         
         atb=new AttributeViewer(this);
         bottomSplitPane.setBottomComponent(atb);      
-        //System.out.println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
+        System.out.println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
         bottomSplitPane.setDividerLocation(450);
     }
     
@@ -115,7 +116,7 @@ public class UserInterface
         else
         {
             System.out.println("2");
-            this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth()-300);
+            this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth()-200);
         }
         //System.out.println(""+this.bottomSplitpane.getDividerLocation() + ","+this.frame.getWidth());
     }

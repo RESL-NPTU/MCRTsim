@@ -19,8 +19,8 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import simulation.Core;
-import simulation.DataSetting;
+import SystemEnvironment.Core;
+import WorkLoadSet.DataSetting;
 import userInterface.UserInterface;
 import userInterface.backEnd.ResultViewer;
 import userInterface.backEnd.TimeLineResult;
@@ -163,9 +163,9 @@ public class InfoWin extends JPanel
                     
                     if(InfoWin.this.curResultViewer != null)
                     {
-                        InfoWin.this.curResultViewer.getResultViewer().reSetAttributes();
-                        InfoWin.this.curResultViewer.getResultViewer().mouseStatus.setMouseStatus(ViewerStatus.IDLE);
-                        InfoWin.this.parent.getAttributes().setTimeLineSet(InfoWin.this.curResultViewer.getResultViewer().getTimeLineSet());
+                        InfoWin.this.curResultViewer.getTimeLineResult().reSetAttributes();
+                        InfoWin.this.curResultViewer.getTimeLineResult().mouseStatus.setMouseStatus(ViewerStatus.IDLE);
+                        InfoWin.this.parent.getAttributes().setTimeLineSet(InfoWin.this.curResultViewer.getTimeLineResult().getTimeLineSet());
                         
                         int scale = InfoWin.this.curResultViewer.getScale();
                         if(scale<0)
@@ -213,17 +213,24 @@ public class InfoWin extends JPanel
         nPanel.add(CJTB,BorderLayout.CENTER);
         this.add(nPanel,BorderLayout.NORTH);
         
-        JPanel Panel = new JPanel();
-        this.add(Panel, BorderLayout.SOUTH);
-        Panel.setLayout(new BorderLayout(0, 0));
+        
+        
+        
+        JPanel sPanel = new JPanel();
+        this.add(sPanel, BorderLayout.SOUTH);
+        sPanel.setLayout(new BorderLayout(0, 0));
 
         message = new JLabel("Message Here");
         message.setHorizontalAlignment(SwingConstants.CENTER);
-        Panel.add(message, BorderLayout.WEST);
+        sPanel.add(message, BorderLayout.WEST);
         timeMessage = new JLabel("Message Here");
         timeMessage.setHorizontalAlignment(SwingConstants.CENTER);
-        Panel.add(timeMessage, BorderLayout.CENTER);
+        sPanel.add(timeMessage, BorderLayout.CENTER);
         this.add(this.tabbedPane, BorderLayout.CENTER);
+        
+        
+        
+        
     }
 
     public void pressDrawButton()
@@ -232,14 +239,14 @@ public class InfoWin extends JPanel
         this.ds = parent.getSimulationViewer().getDataReader().getDataSetting();
         this.tabbedPane.removeAll();
         
-        this.tabbedPane.addTab("AllCores",new ResultViewer(this,ds.getProcessor().getCores(),"AllCores"));
+        this.tabbedPane.addTab("AllCores",new ResultViewer(this,ds.getProcessor().getAllCore(),"AllCores"));
             
-        if(ds.getProcessor().getCores().size() > 1)
+        if(ds.getProcessor().getAllCore().size() > 1)
         {
-            this.tabbedPane.addTab("AllTasks",new ResultViewer(this,ds.getProcessor().getCores(),"AllTasks"));
+            this.tabbedPane.addTab("AllTasks",new ResultViewer(this,ds.getProcessor().getAllCore(),"AllTasks"));
         }
         
-        for(Core c : ds.getProcessor().getCores())
+        for(Core c : ds.getProcessor().getAllCore())
         {
             this.tabbedPane.addTab("Core "+c.getID(),new ResultViewer(this,c));
         }
@@ -250,15 +257,15 @@ public class InfoWin extends JPanel
     
     public void pressTimeLineButton()
     {
-        this.curResultViewer.getResultViewer().mouseStatus.chengeMouseStatus();
-        this.curResultViewer.getResultViewer().repaint();
+        this.curResultViewer.getTimeLineResult().mouseStatus.chengeMouseStatus();
+        this.curResultViewer.getTimeLineResult().repaint();
     }
     
     public void pressZoomInButton()
     {
         int scale = this.curResultViewer.getScale();
-        ScheduleResult sr = InfoWin.this.curResultViewer.getScheduleResult();
-        TimeLineResult rv = InfoWin.this.curResultViewer.getResultViewer();
+        ScheduleResult sr = this.curResultViewer.getScheduleResult();
+        TimeLineResult tlr = this.curResultViewer.getTimeLineResult();
         
         if(scale<0)
         {
@@ -268,14 +275,14 @@ public class InfoWin extends JPanel
                 scale=1;
             }
             sr.setBaseunit((double)2);
-            rv.repaint();
+            tlr.repaint();
         }
         else if(scale < 16)
         {
             sr.setBaseunit((double)2);
-            rv.repaint();
+            tlr.repaint();
             scale*=2;
-            rv.repaint();
+            tlr.repaint();
             
         }
 
@@ -289,35 +296,43 @@ public class InfoWin extends JPanel
         
         this.curResultViewer.setScale(scale);
         
-        rv.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
+        if(sr.isCoreTimeLine)
+        {
+            tlr.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
+                                                    sr.getCoreTimeLines().size() * sr.getTaskGap() + 100));
+        }
+        else
+        {
+            tlr.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
                                                     sr.getTaskTimeLines().size() * sr.getTaskGap() + 100));
-   
-        rv.revalidate();
+        }
+        
+        tlr.revalidate();
     }
     
     public void pressZoomOutButton()
     {
         int scale = this.curResultViewer.getScale();
         ScheduleResult sr = InfoWin.this.curResultViewer.getScheduleResult();
-        TimeLineResult rv = InfoWin.this.curResultViewer.getResultViewer();
+        TimeLineResult tlr = InfoWin.this.curResultViewer.getTimeLineResult();
         
         if(scale>1)
         {
             scale/=2;
             sr.setBaseunit(0.5);
-            rv.repaint();
+            tlr.repaint();
         }
         else if(scale==1)
         {
             scale=(-2);
             sr.setBaseunit(0.5);
-            rv.repaint();
+            tlr.repaint();
         }
         else if((scale<0)&&(scale>(-8)))
         {
             scale*=2;
             sr.setBaseunit(0.5);
-            rv.repaint();
+            tlr.repaint();
         }
 
         if(scale>=(-8))
@@ -330,9 +345,18 @@ public class InfoWin extends JPanel
         
         this.curResultViewer.setScale(scale);
         
-        rv.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
+        if(sr.isCoreTimeLine)
+        {
+            tlr.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
+                                                    sr.getCoreTimeLines().size() * sr.getTaskGap() + 100));
+        }
+        else
+        {
+            tlr.setPreferredSize(new Dimension((int)((sr.getFinalTime()+1)*sr.getBaseunit()+200), 
                                                     sr.getTaskTimeLines().size() * sr.getTaskGap() + 100));
-        rv.revalidate();
+        }
+        
+        tlr.revalidate();           
     }
     
     public DataSetting getDataSetting()

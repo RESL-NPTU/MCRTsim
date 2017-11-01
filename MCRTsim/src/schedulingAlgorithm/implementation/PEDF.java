@@ -5,27 +5,30 @@
  */
 package schedulingAlgorithm.implementation;
 
-import schedulingAlgorithm.DynamicPrioritySchedulingAlgorithm;
-import simulation.Job;
-import simulation.Priority;
+import PartitionAlgorithm.PartitionAlgorithm;
+import SystemEnvironment.Core;
+import WorkLoadSet.JobQueue;
+import WorkLoadSet.TaskSet;
+import java.util.Vector;
+import schedulingAlgorithm.PartitionedSchedulingAlgorithm;
 
 /**
  *
  * @author ShiuJia
  */
-public class PEDF extends DynamicPrioritySchedulingAlgorithm
-{    
+public class PEDF extends PartitionedSchedulingAlgorithm
+{
     public PEDF()
     {
-        this.setName("Partitioned Earliest Deadline First Scheduling Algorithm");
-        this.isGlobalScheduling = false;
+        this.setName("Partitioned EDF");
     }
     
     @Override
-    public void setPriority(Job j)
+    public void setCoresLocalSchedulingAlgorithm(Vector<Core> cores)
     {
-        j.setOriginalPriority(new Priority(j.getAbsoluteDeadline()));
+        for(Core c : cores)
+        {
+            c.setLocalSchedAlgorithm(new EDF());
+        }
     }
 }
-
-

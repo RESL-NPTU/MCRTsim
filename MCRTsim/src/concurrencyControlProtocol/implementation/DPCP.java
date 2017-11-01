@@ -5,77 +5,88 @@
  */
 package concurrencyControlProtocol.implementation;
 
+import SystemEnvironment.Processor;
+import WorkLoad.CriticalSection;
+import WorkLoad.Job;
+import WorkLoad.Priority;
+import WorkLoad.SharedResource;
+import WorkLoad.Task;
 import java.util.Vector;
-import simulation.DataSetting;
-import simulation.Final;
-import simulation.Job;
-import simulation.LockInfo;
-import simulation.Priority;
-import simulation.Task;
+import mcrtsim.Definition;
 
 /**
  *
- * @author USER
+ * @author YC
  */
-
-public class DPCP extends PCP {
-    
-    public DPCP(DataSetting ds) 
+public class DPCP extends PCP
+{
+    public DPCP()
     {
-        super(ds);
         this.setName("Dynamic Priority Ceiling Protocol");
-        
-        //設定所有的Resources Ceiling的初始值
-        for(int i = 0; i < this.getDataSetting().getResourceSet().size(); i++) //抓所有的Resources
-        {
-            int Highest_Priority_Deadline=Integer.MAX_VALUE;
-            
-            //抓出該Resource的所有Tasks
-            
-            for(int j = 0; j < this.getDataSetting().getResourceSet().getResources(i).getAccessSet().size(); j++)
-            {
-                Task task = this.getDataSetting().getResourceSet().getResources(i).getAccessSet().getTask(j);
-                
-                if(task.getRelativeDeadline() < Highest_Priority_Deadline)
-                {
-                    Highest_Priority_Deadline = task.getRelativeDeadline();
-                }
-            }
-            this.getDataSetting().getResourceSet().getResources(i).setPriorityCeiling(new Priority(Highest_Priority_Deadline));
-        }
     }
     
-    public void jobCompleted(Job j, LockInfo l) 
+    @Override
+    public void preAction(Processor p)
+    {
+        //DPCP 設定Resource的初始值方法如下：
+        //挑出使用特定Resource的所有Task中最緊急的Deadline，設定給此Resource
+        for(int i = 0; i < p.getSharedResourceSet().size(); i++)
+        {
+            this.ceilingRes.add(Definition.Ohm);
+            
+            long Highest_Priority_Deadline=Integer.MAX_VALUE;
+            
+            for(Task t : p.getSharedResourceSet().get(i).getAccessTaskSet())
+            {
+                if(t.getRelativeDeadline() < Highest_Priority_Deadline)
+                {
+                    Highest_Priority_Deadline = t.getRelativeDeadline();
+                }
+            }
+            
+            this.ceilingRes.set(i, new Priority(Highest_Priority_Deadline));
+        }
+        
+    }
+    
+    @Override
+    public void jobCompletedAction(Job j)
     {
         //在資源解鎖時設定下一輪的Resources Ceiling
-        Vector<Integer> curDeadlineSet = new Vector<>();
+        Vector<Long> curDeadlineSet = new Vector<>();
+        
+        CriticalSection criticalSection = null;
         for(int i=0;i<j.getCriticalSectionSet().size();i++)//設定下一輪的Resources Ceiling
         {
-            for(int k=0;k<j.getCriticalSectionSet().get(i).getResources().getAccessSet().size();k++) //該Resource的所有Tasks
+            criticalSection = j.getCriticalSectionSet().poll();
+        
+            for(int k=0;k<criticalSection.getUseSharedResource().getAccessTaskSet().size();k++) //該Resource的所有Tasks
             {
-                int tempDeadLine = j.getCriticalSectionSet().get(i).getResources()
-                        .getAccessSet().getTask(k).getCurJob().getAbsoluteDeadline(); //找出當前Job的DeadLine
+                long tempDeadLine = criticalSection.getUseSharedResource().getAccessTaskSet().getTask(k).getCurJob().getAbsoluteDeadline(); //找出當前Job的DeadLine
                 /*避免同一個Job的DeadLine被記錄*/
-                if(j.getCriticalSectionSet().get(i).getResources().getAccessSet().getTask(k).getCurJob() != j)
+                if(criticalSection.getUseSharedResource().getAccessTaskSet().getTask(k).getCurJob() != j)
                 {
                     curDeadlineSet.add(tempDeadLine); //儲存所有的Task DeadLine
                 }
                 
-                int nextDeadLine = tempDeadLine + j.getCriticalSectionSet().get(i).getResources()
-                        .getAccessSet().getTask(k).getRelativeDeadline();//找出當前Job的下一個Job的DeadLine
+                //找出當前Job的下一個Job的DeadLine
+                long nextDeadLine = tempDeadLine + criticalSection.getUseSharedResource().getAccessTaskSet().getTask(k).getRelativeDeadline();
+                
                 curDeadlineSet.add(nextDeadLine); //儲存所有的Task的下一個Job的DeadLine
             }
             
-            int earliestDeadline = Integer.MAX_VALUE;//紀錄目前最緊急的DeadLine
+            long earliestDeadline = Long.MAX_VALUE;//紀錄目前最緊急的DeadLine
         
-            for(int Deadline :  curDeadlineSet)
+            for(long Deadline :  curDeadlineSet)
             {
                 if(Deadline < earliestDeadline && Deadline > j.getAbsoluteDeadline())
                 {
                     earliestDeadline = Deadline;
                 }
             }
-            j.getCriticalSectionSet().get(i).getResources().getPriorityCeiling().setValue(earliestDeadline);
+            this.ceilingRes.get(criticalSection.getUseSharedResource().getID() - 1).setValue(earliestDeadline);
         }
+        
     }
+    
 }

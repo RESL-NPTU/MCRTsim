@@ -40,6 +40,7 @@ public class TimeLineResult extends JPanel
 	public TimeLineResult(ScheduleResult sr)
         {
             super();
+            
             this.mouseStatus = new MouseStatus();
             this.parent = sr;
             this.setLayout(null);
@@ -58,7 +59,7 @@ public class TimeLineResult extends JPanel
             this.setVisible(true);
             ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE); //工作標籤顯示時間
             
-            resourceColor = new Color[] //宣告色彩配置
+            resourceColor = new Color[]
             {
                 Color.getHSBColor((float) 0.1, 1, 1),Color.getHSBColor((float) 0.2, 1, 1),
                 Color.getHSBColor((float) 0.3, 1, 1),Color.getHSBColor((float) 0.45,(float) 0.2, 1),
@@ -95,6 +96,7 @@ public class TimeLineResult extends JPanel
                     task.drawResources(this);
                 }
             }
+            
             this.addMouseMotionListener
             (new MouseAdapter()
                 {
@@ -173,15 +175,15 @@ public class TimeLineResult extends JPanel
                         if(TimeLineResult.this.mouseStatus.getMouseStatus() == ViewerStatus.EXECUTION)
                         {
                             MouseTimeLine mtl;
-                                    
+
                             if(TimeLineResult.this.parent.isMultiCore)
                             {
                                 int TimeLineID = mouseY < 285 ? 0 : ((mouseY-285)/TimeLineResult.this.parent.getTaskGap())+1;
-                            
+
                                 mtl = new MouseTimeLine
                                 (
                                     TimeLineResult.this, TimeLineResult.this.curTime, TimeLineResult.this.parent.getAtbSet
-                                    (TimeLineID,(int)(TimeLineResult.this.curTime * parent.getAccuracy())
+                                    (TimeLineID,(int)(curTime * parent.getAccuracy())
                                     )
                                 );
                             }
@@ -195,7 +197,7 @@ public class TimeLineResult extends JPanel
                                     )
                                 );
                             }
-                            
+
                             TimeLineResult.this.add(mtl);
                             TimeLineResult.this.mouseTimeLineSet.addItem(mtl);
                             TimeLineResult.this.mouseTimeLineSet.setSelectedIndex(TimeLineResult.this.mouseTimeLineSet.getItemCount()-1);
@@ -252,13 +254,7 @@ public class TimeLineResult extends JPanel
             }
         }
         
-        public void paint(Graphics g)
-        {
-            this.paintComponent(g);
-        }
-
-        
-        private void drawCoreTimeLine(Graphics g)//繪製出CoreTimeLine
+        private void drawCoreTimeLine(Graphics g)
         {
             g.setPaintMode();
             g.setColor(Color.black);
@@ -308,18 +304,18 @@ public class TimeLineResult extends JPanel
             //------MouseTimeLine   ^
             g.setColor(Color.black);
 
-            for(int i = 0 ;i < parent.parent.parent.getDataSetting().getResourceSet().size() ; i++)
+            for(int i = 0 ;i < parent.parent.parent.getDataSetting().getSharedResourceSet().size() ; i++)
             {
                 int resourcesWidth = 50;
                 g.setColor(resourceColor[i]);
                 g.fillRect(x + resourcesWidth * (i), y+18, resourcesWidth, 13);
                 g.setColor(this.reverseColor(resourceColor[i]));
-                g.drawString("R" + (i+1) + "("+ parent.parent.parent.getDataSetting().getResourceSet().getResources(i).getResourcesAmount() +")" ,x + resourcesWidth*(i), y+30);
+                g.drawString("R" + (i+1) + "("+ parent.parent.parent.getDataSetting().getSharedResourceSet().getSharedResource(i).getResourcesAmount() +")" ,x + resourcesWidth*(i), y+30);
                 g.setColor(Color.black);
             }
         }
         
-        private void drawTaskTimeLine(Graphics g)//繪製出TaskTimeLine
+        private void drawTaskTimeLine(Graphics g)
         {
             g.setPaintMode();
             g.setColor(Color.black);
@@ -371,17 +367,22 @@ public class TimeLineResult extends JPanel
             //------MouseTimeLine   ^
             g.setColor(Color.black);
 
-            for(int i = 0 ;i < parent.parent.parent.getDataSetting().getResourceSet().size() ; i++)
+            for(int i = 0 ;i < parent.parent.parent.getDataSetting().getSharedResourceSet().size() ; i++)
             {
                 int resourcesWidth = 50;
                 g.setColor(resourceColor[i]);
                 g.fillRect(x + resourcesWidth * (i), y+18, resourcesWidth, 13);
                 g.setColor(this.reverseColor(resourceColor[i]));
-                g.drawString("R" + (i+1) + "("+ parent.parent.parent.getDataSetting().getResourceSet().getResources(i).getResourcesAmount() +")" ,x + resourcesWidth*(i), y+30);
+                g.drawString("R" + (i+1) + "("+ parent.parent.parent.getDataSetting().getSharedResourceSet().getSharedResource(i).getResourcesAmount() +")" ,x + resourcesWidth*(i), y+30);
                 g.setColor(Color.black);
             }
         }
         
+        public void paint(Graphics g)
+        {
+            this.paintComponent(g);
+
+        }
         
         public Double getCurTime()
         {
@@ -393,7 +394,7 @@ public class TimeLineResult extends JPanel
             return this.mouseTimeLineSet;
         }
        
-        public void reSetAttributes()//重新設置Attributes的欄位
+        public void reSetAttributes()
         {
             if (this.mouseTimeLineSet.getItemCount() != 0) 
             {

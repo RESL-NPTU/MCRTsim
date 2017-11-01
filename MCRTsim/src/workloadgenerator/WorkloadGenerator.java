@@ -45,8 +45,8 @@ public class WorkloadGenerator extends JFrame
 {
     public SimulationViewer parent;
     private wgWorkload workload;
-    public  int accuracy = 1000;
-    public  int exportAccuracy = 1000;
+    public  int accuracy = 100;
+    public  int exportAccuracy = 100;
     private JTextField utilization;
     private JTextField MinNumOftask, MaxNumOftask;
     private JTextField Minperiod , Maxperiod;
@@ -112,7 +112,13 @@ public class WorkloadGenerator extends JFrame
                                     quit = true;
                                     FileDialog fileDialog = new FileDialog(WorkloadGenerator.this, "new", FileDialog.SAVE);
                                     fileDialog.setVisible(true);
-
+                                    
+                                    if(fileDialog.getFile() == null)//如果取消存檔則fileDialog.getFile()會是null
+                                    {
+                                        break;
+                                    }
+                                    
+                                    
                                     Transformer transformer = TransformerFactory.newInstance().newTransformer();
                                     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
                                     transformer.setOutputProperty(OutputKeys.METHOD, "xml");
@@ -123,6 +129,7 @@ public class WorkloadGenerator extends JFrame
                                     StreamResult result = new StreamResult(file);
                                     transformer.transform(source, result);
                                     WorkloadGenerator.this.parent.getSourceTextField().setText(file.getAbsolutePath());
+                                    
                                 break;
                                 
                                 case 1:
@@ -189,16 +196,16 @@ public class WorkloadGenerator extends JFrame
                 {
                     if (e.getStateChange() == ItemEvent.SELECTED) 
                     {
-                        double mp = Double.parseDouble(Minperiod.getText());
-                        Minperiod.setText(String.valueOf(mp/1000));
-                        double Mp = Double.parseDouble(Maxperiod.getText());
-                        Maxperiod.setText(String.valueOf(Mp/1000));
-                        double mc = Double.parseDouble(MincomputationTime.getText());
-                        MincomputationTime.setText(String.valueOf(mc/1000));
-                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
-                        MaxcomputationTime.setText(String.valueOf(Mc/1000));
-                        
-                        WorkloadGenerator.this.accuracy = 1000;
+//                        double mp = Double.parseDouble(Minperiod.getText());
+//                        Minperiod.setText(String.valueOf(mp/1000));
+//                        double Mp = Double.parseDouble(Maxperiod.getText());
+//                        Maxperiod.setText(String.valueOf(Mp/1000));
+//                        double mc = Double.parseDouble(MincomputationTime.getText());
+//                        MincomputationTime.setText(String.valueOf(mc/1000));
+//                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
+//                        MaxcomputationTime.setText(String.valueOf(Mc/1000));
+//                        
+//                        WorkloadGenerator.this.accuracy = 1000;
                         
                     }
                     else if (e.getStateChange() == ItemEvent.DESELECTED) 
@@ -217,14 +224,14 @@ public class WorkloadGenerator extends JFrame
                 {
                     if (e.getStateChange() == ItemEvent.SELECTED) 
                     {
-                        double mp = Double.parseDouble(Minperiod.getText());
-                        Minperiod.setText(String.valueOf(mp*1000));
-                        double Mp = Double.parseDouble(Maxperiod.getText());
-                        Maxperiod.setText(String.valueOf(Mp*1000));
-                        double mc = Double.parseDouble(MincomputationTime.getText());
-                        MincomputationTime.setText(String.valueOf(mc*1000));
-                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
-                        MaxcomputationTime.setText(String.valueOf(Mc*1000));
+//                        double mp = Double.parseDouble(Minperiod.getText());
+//                        Minperiod.setText(String.valueOf(mp*1000));
+//                        double Mp = Double.parseDouble(Maxperiod.getText());
+//                        Maxperiod.setText(String.valueOf(Mp*1000));
+//                        double mc = Double.parseDouble(MincomputationTime.getText());
+//                        MincomputationTime.setText(String.valueOf(mc*1000));
+//                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
+//                        MaxcomputationTime.setText(String.valueOf(Mc*1000));
                         
                         WorkloadGenerator.this.accuracy = 1;
                     }
@@ -238,12 +245,12 @@ public class WorkloadGenerator extends JFrame
         
         GridBagConstraints bag = new GridBagConstraints();
         bag.anchor=GridBagConstraints.WEST;        
-        bag.gridx = 0;
-        bag.gridy = 0;          
-        this.add(sRB,bag);       
-        bag.gridx = 0;
-        bag.gridy = 1;     
-        this.add(msRB,bag);
+//        bag.gridx = 0;
+//        bag.gridy = 0;          
+//        this.add(sRB,bag);       
+//        bag.gridx = 0;
+//        bag.gridy = 1;     
+//        this.add(msRB,bag);
         
         
         bag.anchor = GridBagConstraints.CENTER;  

@@ -37,9 +37,6 @@ public class UserInterface
         this.frame.setBounds(100, 100, 1000, 600);
         this.frame.setMinimumSize(new Dimension(1000, 600));
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
-       // this.frame.setTitle("MCRTSim v0.1");
-        
         splitPane = new JSplitPane();
         this.frame.getContentPane().add(splitPane);
         splitPane.setOrientation(1);

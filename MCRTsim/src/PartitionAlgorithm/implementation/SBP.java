@@ -28,6 +28,8 @@ public class SBP extends PartitionAlgorithm
     public Vector<Similarity> similarityForTemp;
     Vector<TaskSet> partitionTasks = new Vector<TaskSet>();
     
+    double[] tempU;
+            
     public SBP()
     {
         this.setName("Similarity-Based Partitioning");
@@ -37,6 +39,12 @@ public class SBP extends PartitionAlgorithm
     public void taskToCore(Vector<Core> cores, TaskSet taskSet)
     {
         TaskSet allTs = new TaskSet();
+        tempU = new double[cores.size()];
+        
+        for(int i = 0; i < cores.size(); i++)
+        {
+            tempU[i] = 0;
+        }
         
         double u = 0;
         for(Task t : taskSet)
@@ -57,99 +65,88 @@ public class SBP extends PartitionAlgorithm
             }
         }
         
-        for(int i = 0; i < cores.size() - 1; i++)
+        Similarity maxSim = this.findMaxSimilarityTasks(this.similarityForAllTask);
+        this.similarityForTemp = new Vector<Similarity>();
+        int i = this.findMinUCore(cores).getID() - 1;
+        
+        do
         {
-            TaskSet ts = new TaskSet();
-            double tempU = 0;
-            this.similarityForTemp = new Vector<Similarity>();
+            this.similarityForAllTask.remove(maxSim);
+//
+            for(int x = 0 ; x < this.similarityForAllTask.size(); x++)
+            {
+                if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(0)))
+                {
+                    //System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
+                    if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
+                    {
+                        this.similarityForTemp.add(this.similarityForAllTask.get(x));
+                    }
+                }
+            }
+
+            for(int x = 0 ; x < this.similarityForAllTask.size(); x++)
+            {
+                if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(1)))
+                {
+                    //System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
+                    if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
+                    {
+                        this.similarityForTemp.add(this.similarityForAllTask.get(x));
+                    }
+                }
+            }
+
+//            System.out.println("START===============================");
+            for(Task t :maxSim.similarityTask)
+            {
+                if(allTs.contains(t))
+                {
+                    //System.out.println("SBP= Core(" + i + 1 + ") <= T(" + t.getID() + ")");
+                    //t.setLocalCore(cores.get(i));
+                    cores.get(i).addTask(t);
+                    tempU[i] += (double)t.getComputationAmount() / t.getPeriod();
+                    allTs.remove(t);
+                    //System.out.println("SBP= U(" + i + 1 + ") = " + tempU);
+                }
+            }
+//            System.out.println("E N D===============================");
             
-            while(tempU <= u  && this.similarityForAllTask.size() > 0)
+            
+            if(this.similarityForTemp.isEmpty())
             {
-                Similarity maxSim;
-                if(this.similarityForAllTask.size() > 0)
-                {
-                    System.out.println("Size= " + this.similarityForTemp.size());
-                    if(this.similarityForTemp.isEmpty())
-                    {
-                        System.out.println("Size= ET");
-                        maxSim = this.findMaxSimilarityTasks(this.similarityForAllTask);
-                    }
-                    else
-                    {
-                        System.out.println("Size= FT");
-                        maxSim = this.findMaxSimilarityTasks(this.similarityForTemp);
-                        this.similarityForTemp.remove(maxSim);
-                        if(maxSim.similarityRes.size() <= 0)
-                        {
-                            maxSim = this.findMaxSimilarityTasks(this.similarityForAllTask);
-                        }
-                    }
-                    
-                    this.similarityForAllTask.remove(maxSim);
-                    
-                    for(int x = 0 ; x < this.similarityForAllTask.size(); x++)
-                    {
-                        if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(0)))
-                        {
-                            System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
-                            if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
-                            {
-                                this.similarityForTemp.add(this.similarityForAllTask.get(x));
-                            }
-                        }
-                    }
-                    
-                    for(int x = 0 ; x < this.similarityForAllTask.size(); x++)
-                    {
-                        if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(1)))
-                        {
-                            System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
-                            if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
-                            {
-                                this.similarityForTemp.add(this.similarityForAllTask.get(x));
-                            }
-                        }
-                    }
-                    
-                    System.out.println("START===============================");
-                    for(Task t :maxSim.similarityTask)
-                    {
-                        if(allTs.contains(t))
-                        {
-                            System.out.println("SBP= Core(" + i + 1 + ") <= T(" + t.getID() + ")");
-                            //t.setLocalCore(cores.get(i));
-                            cores.get(i).addTask(t);
-                            tempU += (double)t.getComputationAmount() / t.getPeriod();
-                            allTs.remove(t);
-                            System.out.println("SBP= U(" + i + 1 + ") = " + tempU);
-                        }
-                    }
-                    System.out.println("E N D===============================");
-                    
-                }
+                maxSim = this.findMaxSimilarityTasks(this.similarityForAllTask);
+                i = this.findMinUCore(cores).getID() - 1;
+                this.similarityForTemp = new Vector<Similarity>();
             }
-        }
-        
-        if(this.similarityForAllTask.size() > 0)
-        {
-            for(int i = 0; i < this.similarityForAllTask.size(); i++)
+            else
             {
-                for(Task t : this.similarityForAllTask.get(i).similarityTask)
+                maxSim = this.findMaxSimilarityTasks(this.similarityForTemp);
+                this.similarityForTemp.remove(maxSim);
+                if(maxSim.similarityRes.size() <= 0)
                 {
-                    if(allTs.contains(t))
+                    maxSim = this.findMaxSimilarityTasks(this.similarityForAllTask);
+                    i = this.findMinUCore(cores).getID() - 1;
+                    this.similarityForTemp = new Vector<Similarity>();
+                }
+                else
+                {
+                    if(tempU[i] >= u)
                     {
-                        //t.setLocalCore(cores.get(cores.size() - 1));
-                        cores.get(cores.size() - 1).addTask(t);
-                        allTs.remove(t);
+                        i = this.findMinUCore(cores).getID() - 1;
                     }
                 }
             }
+        }while(maxSim != null && maxSim.similarityRes.size() > 0);
+        
+        for(Task t : allTs)
+        {
+            i = this.findMinUCore(cores).getID() - 1;
+        //    t.setLocalCore(cores.get(i));
+            cores.get(i).addTask(t);
+            tempU[i] += (double)t.getComputationAmount() / t.getPeriod();
         }
         
-        for(Task t : taskSet)
-        {
-            System.out.println("SBP= " + t.getID() + ":" + t.getLocalCore().getID());
-        }
     }
     
     public Vector<SharedResource> similarityForTwoTasks(Task t1, Task t2)
@@ -171,25 +168,25 @@ public class SBP extends PartitionAlgorithm
         
         this.similarityForAllTask.add(sim);
         
-        System.out.println("====================");
-        System.out.println("Task" + t1.getID());
-        for(SharedResource r : t1.getResourceSet())
-        {
-            System.out.println("  Resource" + r.getID());
-        }
-        
-        System.out.println("Task" + t2.getID());
-        for(SharedResource r : t2.getResourceSet())
-        {
-            System.out.println("  Resource" + r.getID());
-        }
-        
-        System.out.println("Task" + t1.getID() + ":" + t2.getID());
-        for(SharedResource r : sr)
-        {
-            System.out.println("  Resource" + r.getID());
-        }
-        System.out.println("====================");
+//        System.out.println("====================");
+//        System.out.println("Task" + t1.getID());
+//        for(SharedResource r : t1.getResourceSet())
+//        {
+//            System.out.println("  Resource" + r.getID());
+//        }
+//        
+//        System.out.println("Task" + t2.getID());
+//        for(SharedResource r : t2.getResourceSet())
+//        {
+//            System.out.println("  Resource" + r.getID());
+//        }
+//        
+//        System.out.println("Task" + t1.getID() + ":" + t2.getID());
+//        for(SharedResource r : sr)
+//        {
+//            System.out.println("  Resource" + r.getID());
+//        }
+//        System.out.println("====================");
         
         return sr;
     }
@@ -214,5 +211,21 @@ public class SBP extends PartitionAlgorithm
         }
         
         return tempSim;
+    }
+    
+    private Core findMinUCore(Vector<Core> cores)
+    {
+        double temp = Double.MAX_VALUE;
+        int tempI = -1;
+        for(int i = 0; i < cores.size(); i++)
+        {
+            if(tempU[i] < temp)
+            {
+                temp = tempU[i];
+                tempI = i;
+            }
+        }
+        
+        return cores.get(tempI);
     }
 }

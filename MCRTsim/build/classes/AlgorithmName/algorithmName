@@ -1,0 +1,4 @@
+PartitionAlgorithm,None,Order,SBP,test,WFD
+DVFSMethod,BaseSpeed,CDS,DUAL,MaxSpeed,None,TH
+SchedulingAlgorithm,DMS,EDF,FCFS,GEDF,GRMS,LST,PDMS,PEDF,PFCFS,PLST,PRMS,RMS
+CCProtocol,DPCP,MrsP,MSRP,None,PCP,SRP

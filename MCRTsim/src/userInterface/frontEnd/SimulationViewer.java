@@ -43,9 +43,14 @@ import SystemEnvironment.DataReader;
 import SystemEnvironment.Simulator;
 import WorkLoad.Task;
 import WorkLoadSet.DataSetting;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import mcrtsim.Definition;
 import static mcrtsim.Definition.magnificationFactor;
+import mcrtsim.MCRTsim;
 import mcrtsim.MCRTsimMath;
+import org.apache.commons.io.IOUtils;
 import scriptsetter.Script;
 import scriptsetter.ScriptResult;
 import scriptsetter.ScriptSetter;
@@ -88,8 +93,8 @@ public class SimulationViewer extends JPanel
     {
         super();
         this.parent = ui;
-        this.scriptSetter = new ScriptSetter(SimulationViewer.this);
         this.initialize();
+        this.scriptSetter = new ScriptSetter(SimulationViewer.this);
         
         this.dataGeneratorBtn.addMouseListener
         (new MouseAdapter()
@@ -343,42 +348,22 @@ public class SimulationViewer extends JPanel
         
         JLabel taskToCoreLabel = new JLabel("PartitionAlgorithm: ");
         this.partitionComboBox = new JComboBox<String>();
-        Vector<String> fileName = new Vector<String>();
-        fileName = this.getFolderFile("./src/PartitionAlgorithm/implementation");
-        for(int i = 0; i < fileName.size(); i++)
-        {
-            this.partitionComboBox.addItem(fileName.get(i));
-        }
-        
-        this.partitionComboBox.setSelectedItem("None");
-        
         
         JLabel energyLabel = new JLabel("DVFSMethod: ");
         this.DVFSComboBox = new JComboBox<String>();
-        fileName = this.getFolderFile("./src/dynamicVoltageAndFrequencyScalingMethod/implementation");
-        for(int i = 0; i < fileName.size(); i++)
-        {
-            this.DVFSComboBox.addItem(fileName.get(i));
-        }
-        this.DVFSComboBox.setSelectedItem("None");
         
         JLabel schedulerLabel = new JLabel("SchedulingAlgorithm: ");
         this.schedulingComboBox = new JComboBox<String>();
-        fileName = this.getFolderFile("./src/schedulingAlgorithm/implementation");
-        for(int i = 0; i < fileName.size(); i++)
-        {
-            this.schedulingComboBox.addItem(fileName.get(i));
-        }
-        
-        
+
         JLabel controllerLabel = new JLabel("CCProtocol: ");
         this.CCPComboBox = new JComboBox<String>();
-        fileName = this.getFolderFile("./src/concurrencyControlProtocol/implementation");
-        for(int i = 0; i < fileName.size(); i++)
-        {
-            this.CCPComboBox.addItem(fileName.get(i));
-        }
+
+        
+        this.setComboBox();
+        
         this.CCPComboBox.setSelectedItem("None");
+        this.partitionComboBox.setSelectedItem("None");
+        this.DVFSComboBox.setSelectedItem("None");
         
         configToolBar.setLayout(new GridBagLayout());
         {
@@ -567,7 +552,7 @@ public class SimulationViewer extends JPanel
                 );
 
                 sim.loadDataSetting(dr.getDataSetting());
-                sim.getProcessor().setSchedAlgorithm(getPrioritySchedulingAlgorithm(script.getSchedulingAlorithm()));
+                sim.getProcessor().setSchedAlgorithm(getPrioritySchedulingAlgorithm(script.getSchedulingAlgorithm()));
                 sim.getProcessor().setPartitionAlgorithm(getPartitionAlgorithm(script.getPartitionAlgorithm()));
                 sim.getProcessor().setCCProtocol(getConcurrencyControlProtocol(script.getCCProtocol()));
                 sim.getProcessor().setDVFSMethod(getDynamicVoltageScalingMethod(script.getDVFSMethod()));
@@ -617,6 +602,119 @@ public class SimulationViewer extends JPanel
         }
     }
     
+    private void setComboBox()
+    {
+        
+        String path = MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        System.out.println("" + MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        //IDE : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/build/classes/
+        //jar : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/dist/MCRTsim2.0.jar
+        
+        
+        InputStream is = MCRTsim.class.getClass().getResourceAsStream("/AlgorithmName/algorithmName");
+        
+        if(path.contains("jar"))//路徑包含jar代表是執行jar檔的情況
+        {
+            try 
+            {
+                String fileContent = IOUtils.toString(is, "UTF-8");
+                String[] algorithmType = fileContent.split("\r|\n");
+                //System.out.println(name[0]);
+
+                for(int i = 0 ; i<algorithmType.length ; i++)
+                {
+                    String[] algorithmName = algorithmType[i].split(",");
+                    for(int j = 1; j<algorithmName.length ; j++)
+                    {
+                        switch(algorithmName[0])
+                        {
+                            case "PartitionAlgorithm":
+                                this.partitionComboBox.addItem(algorithmName[j]);
+                            break;
+
+                            case "DVFSMethod":
+                                this.DVFSComboBox.addItem(algorithmName[j]);
+                            break;
+
+                            case "SchedulingAlgorithm":
+                                this.schedulingComboBox.addItem(algorithmName[j]);
+                            break;
+
+                            case "CCProtocol":
+                                this.CCPComboBox.addItem(algorithmName[j]);
+                            break;
+                            default:
+                        }
+                    }
+                }
+
+            } 
+            catch (IOException ex) 
+            {
+                Logger.getLogger(MCRTsim.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        else
+        {
+            try 
+            {
+                String dirPath = System.getProperties().getProperty("user.dir");
+                                                    
+                                                          //資料夾路徑                      創建的檔名
+                PrintStream out = new PrintStream(new File(dirPath+"/src/AlgorithmName/"+"algorithmName"));
+                String str = "";
+                
+                Vector<String> fileName = new Vector<String>();
+                
+                str += "PartitionAlgorithm";
+                fileName = this.getFolderFile(dirPath+"/src/PartitionAlgorithm/implementation");
+                for(int i = 0; i < fileName.size(); i++)
+                {
+                    str += ","+fileName.get(i);
+                    this.partitionComboBox.addItem(fileName.get(i));
+                }
+                out.println(str);
+                str="";
+                
+                str += "DVFSMethod";
+                fileName = this.getFolderFile(dirPath+"/src/dynamicVoltageAndFrequencyScalingMethod/implementation");
+                for(int i = 0; i < fileName.size(); i++)
+                {
+                    str += ","+fileName.get(i);
+                    this.DVFSComboBox.addItem(fileName.get(i));
+                }
+                out.println(str);
+                str="";
+
+                str += "SchedulingAlgorithm";
+                fileName = this.getFolderFile(dirPath+"/src/schedulingAlgorithm/implementation");
+                for(int i = 0; i < fileName.size(); i++)
+                {
+                    str += ","+fileName.get(i);
+                    this.schedulingComboBox.addItem(fileName.get(i));
+                }  
+                out.println(str);
+                str="";
+
+                str += "CCProtocol";
+                fileName = this.getFolderFile(dirPath+"/src/concurrencyControlProtocol/implementation");
+                for(int i = 0; i < fileName.size(); i++)
+                {
+                    str += ","+fileName.get(i);
+                    this.CCPComboBox.addItem(fileName.get(i));
+                }
+                out.println(str);
+                str="";
+
+                out.close();
+            }
+            catch (FileNotFoundException ex) 
+            {
+                Logger.getLogger(SimulationViewer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     public DataReader getDataReader()
     {
         return this.dr;
@@ -627,10 +725,12 @@ public class SimulationViewer extends JPanel
         Vector<String> fileName = new Vector<String>();
         File folder = new File(path);
         String[] list = folder.list();
+        
         for(int i = 0; i < list.length; i++)
         {
             String name = list[i].split("\\.")[0];
-            if(name != null && !name.equals(""))
+            
+            if(name != null && !name.contains("$") && !name.isEmpty())
             {
                 fileName.add(name);
             }
@@ -773,7 +873,5 @@ public class SimulationViewer extends JPanel
             s += "0";
         }
         Definition.magnificationFormat = s;
-        
-
     }
 }

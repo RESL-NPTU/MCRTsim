@@ -179,7 +179,7 @@ public class ScriptTable extends JPanel
     private void addRow(Script script)
     {
         Object[] object = new Object[]{script.getID(),script.getWorkloadSite()
-                ,script.getProcessorSite(),script.getPartitionAlgorithm(),script.getDVFSMethod(),script.getSchedulingAlorithm()
+                ,script.getProcessorSite(),script.getPartitionAlgorithm(),script.getDVFSMethod(),script.getSchedulingAlgorithm()
                 ,script.getCCProtocol(),script.getSimulationTime()};
         this.tableModel.addRow(object);
     }

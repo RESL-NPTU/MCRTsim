@@ -34,8 +34,8 @@ public class ExperimentResultPopupWin extends JFrame
         ,"DVFS Method : ","Schduling Algorithm : ","Concurrency Control Protocol : ","The Number Of Total Job Compeleted : "
         ,"The Number Of Total Job MissDeadline : ","Total Power Consumption : ", "Total Average Power Consumption : "
         ,"Total Pending Time : ","Total Average Pending Time : ","Total Response Time : ","Total Average Response Time : "};
-    private JLabel simulationTime,coreNumber,taskNumber,resourceNumber,totalUtilization,patitionMethod,DVFSMethod,schdulingAlgorithm
-                ,concurrencyControlProtocol,totalJobCompeletedNumber,totalJobMissDeadlineNumber,totalPowerConsumption
+    private JLabel simulationTime,coreCount,taskCount,resourceCount,totalUtilization,patitionMethod,DVFSMethod,schdulingAlgorithm
+                ,concurrencyControlProtocol,totalJobCompeletedCount,totalJobMissDeadlineCount,totalPowerConsumption
                 ,totalAveragePowerConsumption,totalPendingTime,totalAveragePendingTime,totalResponseTime,totalAverageResponseTime;
     
     
@@ -51,16 +51,16 @@ public class ExperimentResultPopupWin extends JFrame
     {
         data = new Vector<>();
         simulationTime = new JLabel();
-        coreNumber = new JLabel();
-        taskNumber = new JLabel();
-        resourceNumber = new JLabel();
+        coreCount = new JLabel();
+        taskCount = new JLabel();
+        resourceCount = new JLabel();
         totalUtilization = new JLabel();
         patitionMethod = new JLabel();
         DVFSMethod = new JLabel();
         schdulingAlgorithm = new JLabel();
         concurrencyControlProtocol = new JLabel();
-        totalJobCompeletedNumber = new JLabel();
-        totalJobMissDeadlineNumber = new JLabel();
+        totalJobCompeletedCount = new JLabel();
+        totalJobMissDeadlineCount = new JLabel();
         totalPowerConsumption = new JLabel();
         totalAveragePowerConsumption = new JLabel();
         totalPendingTime = new JLabel();
@@ -69,16 +69,16 @@ public class ExperimentResultPopupWin extends JFrame
         totalAverageResponseTime = new JLabel();
         
         data.add(simulationTime);
-        data.add(coreNumber);
-        data.add(taskNumber);
-        data.add(resourceNumber);
+        data.add(coreCount);
+        data.add(taskCount);
+        data.add(resourceCount);
         data.add(totalUtilization);
         data.add(patitionMethod);
         data.add(DVFSMethod);
         data.add(schdulingAlgorithm);
         data.add(concurrencyControlProtocol);
-        data.add(totalJobCompeletedNumber);
-        data.add(totalJobMissDeadlineNumber);
+        data.add(totalJobCompeletedCount);
+        data.add(totalJobMissDeadlineCount);
         data.add(totalPowerConsumption);
         data.add(totalAveragePowerConsumption);
         data.add(totalPendingTime);
@@ -146,17 +146,17 @@ public class ExperimentResultPopupWin extends JFrame
             TaskSet ts = this.parent.getDataReader().getDataSetting().getTaskSet();
         
             simulationTime.setText(""+math.changeDecimalFormat(((double)this.parent.getSimulationTime()/magnificationFactor)) + " (time)");
-            coreNumber.setText(""+this.parent.getDataReader().getDataSetting().getProcessor().getAllCore().size());
-            taskNumber.setText(""+ts.size());
-            resourceNumber.setText(""+this.parent.getDataReader().getDataSetting().getSharedResourceSet().size());
+            coreCount.setText(""+this.parent.getDataReader().getDataSetting().getProcessor().getAllCore().size());
+            taskCount.setText(""+ts.size());
+            resourceCount.setText(""+this.parent.getDataReader().getDataSetting().getSharedResourceSet().size());
 //            totalUtilization.setText("" + Double.parseDouble(df.format(ts.getTotalUtilization())));
             patitionMethod.setText(""+this.parent.getPartitionComboBox().getSelectedItem().toString());
             DVFSMethod.setText(""+this.parent.getDVFSComboBox().getSelectedItem().toString());
             schdulingAlgorithm.setText(""+this.parent.getSchedulingComboBox().getSelectedItem().toString());
             concurrencyControlProtocol.setText(""+this.parent.getCCPComboBox().getSelectedItem().toString());
             
-            totalJobCompeletedNumber.setText(""+ts.getTotalJobCompletedNumber()+"/"+ts.getTotalJobNumber());
-            totalJobMissDeadlineNumber.setText(""+ts.getTotalJobMissDeadlineNumber()+"/"+ts.getTotalJobNumber());
+            totalJobCompeletedCount.setText(""+ts.getTotalJobCompletedNumber()+"/"+ts.getTotalJobNumber());
+            totalJobMissDeadlineCount.setText(""+ts.getTotalJobMissDeadlineNumber()+"/"+ts.getTotalJobNumber());
             totalPowerConsumption.setText(""+math.changeDecimalFormat(this.parent.getDataReader().getDataSetting().getProcessor().getTotalPowerConsumption()/magnificationFactor) + " (mW)");
             totalAveragePowerConsumption.setText(""+math.changeDecimalFormat(((this.parent.getDataReader().getDataSetting().getProcessor().getTotalPowerConsumption()/magnificationFactor)
                                                     /((double)this.parent.getSimulationTime()/magnificationFactor)))+" (mW/time)");

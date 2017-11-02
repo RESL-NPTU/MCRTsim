@@ -120,9 +120,9 @@ public class TaskSet extends Vector<Task>
         double time = 0;
         for(Task t : this)
         {
-            for(Job j : t.getJobSet())
+            for(int i = 0 ; i < t.getJobCount() ; i++)
             {
-                time += j.getPendingTime();
+                time += t.getJobSet().get(i).getPendingTime();
             }
         }
         return time/magnificationFactor;
@@ -145,9 +145,9 @@ public class TaskSet extends Vector<Task>
         double time = 0;
         for(Task t : this)
         {
-            for(Job j : t.getJobSet())
+            for(int i = 0 ; i < t.getJobCount() ; i++)
             {
-                time += j.getResponseTime();
+                time += t.getJobSet().get(i).getResponseTime();
             }
         }
         return time/magnificationFactor;

@@ -16,20 +16,20 @@ import mcrtsim.MCRTsimMath;
 public class Script 
 {
     public ScriptTable parent;
-    private String ID,workloadSite,processorSite,partitionAlgorithm,DVFSMethod,schedAlorithm,CCProtocol,simulationTime;
+    private String ID,workloadSite,processorSite,partitionAlgorithm,DVFSMethod,schedAlgorithm,CCProtocol,simulationTime;
     private Vector<ScriptResult> scriptResultSet;
     private  MCRTsimMath math = new MCRTsimMath();
     
     public Script(ScriptTable ST,ScriptPanel SP)
     {
         this.parent = ST;
-        this.scriptResultSet = new Vector();
+        this.scriptResultSet = new Vector<>();
         this.ID = SP.getScriptID();
         this.workloadSite = SP.getWorkloadSite();
         this.processorSite = SP.getProcessorSite();
         this.partitionAlgorithm = SP.getPartitionMethod();
         this.DVFSMethod = SP.getDVFSMethod();
-        this.schedAlorithm = SP.getSchedAlorithm();
+        this.schedAlgorithm = SP.getSchedAlorithm();
         this.CCProtocol = SP.getCCProtocol();
         this.simulationTime = SP.getSimulationTime();
     }
@@ -43,7 +43,7 @@ public class Script
         this.processorSite = SP.getProcessorSite();
         this.partitionAlgorithm = SP.getPartitionMethod();
         this.DVFSMethod = SP.getDVFSMethod();
-        this.schedAlorithm = SP.getSchedAlorithm();
+        this.schedAlgorithm = SP.getSchedAlorithm();
         this.CCProtocol = SP.getCCProtocol();
         this.simulationTime = SP.getSimulationTime();
     }
@@ -60,7 +60,7 @@ public class Script
     
     public String outputResult()
     {
-        String str = this.DVFSMethod+" "+this.partitionAlgorithm+" "+this.schedAlorithm+" "+this.CCProtocol+"<br>";
+        String str = this.DVFSMethod+" "+this.partitionAlgorithm+" "+this.schedAlgorithm+" "+this.CCProtocol+"<br>";
         for(ScriptResult sr : this.scriptResultSet)
         {
             str+=sr.outputResult()+"<br>";
@@ -88,9 +88,9 @@ public class Script
         this.DVFSMethod = s;
     }
     
-    public void setSchedulingAlorithm(String s)
+    public void setSchedulingAlgorithm(String s)
     {
-        this.schedAlorithm = s;
+        this.schedAlgorithm = s;
     }
     
     public void setCCProtocol(String s)
@@ -130,9 +130,9 @@ public class Script
         return this.DVFSMethod;
     }
     
-    public String getSchedulingAlorithm()
+    public String getSchedulingAlgorithm()
     {
-        return this.schedAlorithm;
+        return this.schedAlgorithm;
     }
     
     public String getCCProtocol()

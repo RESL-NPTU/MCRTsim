@@ -7,7 +7,6 @@ package scriptsetter;
 
 
 import java.awt.BorderLayout;
-import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -190,10 +189,14 @@ public class ScriptPanel extends JPanel
         configToolBar1.add(partitionLabel);
         configToolBar1.add(partitionComboBox);
         
-        fileName = this.getFolderFile("./src/PartitionAlgorithm/implementation");
         for(int i = 0; i < fileName.size(); i++)
         {
             this.partitionComboBox.addItem(fileName.get(i));
+        }
+        
+        for(int i = 0 ; i<this.parent.parent.getPartitionComboBox().getItemCount() ; i++)
+        {
+            this.partitionComboBox.addItem(this.parent.parent.getPartitionComboBox().getItemAt(i));
         }
 
         this.partitionComboBox.setSelectedItem("None");
@@ -204,11 +207,12 @@ public class ScriptPanel extends JPanel
         configToolBar2.add(DVFSLabel);
         configToolBar2.add(DVFSComboBox);
         
-        fileName = this.getFolderFile("./src/dynamicVoltageAndFrequencyScalingMethod/implementation");
-        for(int i = 0; i < fileName.size(); i++)
+        for(int i = 0 ; i<this.parent.parent.getDVFSComboBox().getItemCount() ; i++)
         {
-            this.DVFSComboBox.addItem(fileName.get(i));
+            this.DVFSComboBox.addItem(this.parent.parent.getDVFSComboBox().getItemAt(i));
         }
+        
+        
         this.DVFSComboBox.setSelectedItem("None");
 
         JLabel schedulerLabel = new JLabel("SchedAlgorithm: ");
@@ -216,22 +220,21 @@ public class ScriptPanel extends JPanel
         configToolBar3.add(schedulerLabel);
         configToolBar3.add(schedulingComboBox);
         
-        fileName = this.getFolderFile("./src/schedulingAlgorithm/implementation");
-        for(int i = 0; i < fileName.size(); i++)
+        for(int i = 0 ; i<this.parent.parent.getSchedulingComboBox().getItemCount() ; i++)
         {
-            this.schedulingComboBox.addItem(fileName.get(i));
+            this.schedulingComboBox.addItem(this.parent.parent.getSchedulingComboBox().getItemAt(i));
         }
-
+        
+        
 
         JLabel controllerLabel = new JLabel("CCProtocol: ");
         this.CCPComboBox = new JComboBox<String>();
         configToolBar4.add(controllerLabel);
         configToolBar4.add(CCPComboBox);
         
-        fileName = this.getFolderFile("./src/concurrencyControlProtocol/implementation");
-        for(int i = 0; i < fileName.size(); i++)
+        for(int i = 0 ; i<this.parent.parent.getCCPComboBox().getItemCount() ; i++)
         {
-            this.CCPComboBox.addItem(fileName.get(i));
+            this.CCPComboBox.addItem(this.parent.parent.getCCPComboBox().getItemAt(i));
         }
         this.CCPComboBox.setSelectedItem("None");
         
@@ -295,21 +298,7 @@ public class ScriptPanel extends JPanel
     {
         return (String)this.CCPComboBox.getSelectedItem();
     }
-    
-    
-    public Vector<String> getFolderFile(String path)
-    {
-        Vector<String> fileName = new Vector<String>();
-        File folder = new File(path);
-        String[] list = folder.list();
-        for(int i = 0; i < list.length; i++)
-        {
-            fileName.add(list[i].split("\\.")[0]);
-        }
-        return fileName;
-    }
-    
-    
+        
     public JTextField getSourceTextField()
     {
         return this.workloadTextField;

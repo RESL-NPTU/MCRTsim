@@ -60,7 +60,7 @@ public class XMLWriter
                     
                     resultElement.setAttribute("partitionAlgorithm",s.getPartitionAlgorithm());
                     resultElement.setAttribute("DVFSMethod",s.getDVFSMethod());
-                    resultElement.setAttribute("schedulingAlorithm",s.getSchedulingAlorithm());
+                    resultElement.setAttribute("schedulingAlgorithm",s.getSchedulingAlgorithm());
                     resultElement.setAttribute("CCProtocol",s.getCCProtocol());
                     resultElement.setAttribute("simulationTime",s.getSimulationTime());
                     resultElement.setAttribute("workloadCount",String.valueOf(s.getWorkloadCount()));

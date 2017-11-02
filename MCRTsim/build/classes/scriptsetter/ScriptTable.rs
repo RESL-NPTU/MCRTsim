@@ -1,2 +1,0 @@
-scriptsetter.ScriptTable
-scriptsetter.TableModel

@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package userInterface.frontEnd;
+import static mcrtsim.MCRTsim.println;
 
 import PartitionAlgorithm.PartitionAlgorithm;
 import SystemEnvironment.Core;
@@ -23,7 +24,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -46,6 +46,7 @@ import WorkLoadSet.DataSetting;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Vector;
 import mcrtsim.Definition;
 import static mcrtsim.Definition.magnificationFactor;
 import mcrtsim.MCRTsim;
@@ -66,8 +67,8 @@ import workloadgenerator.WorkloadGenerator;
 public class SimulationViewer extends JPanel
 {        
     public UserInterface parent;
-    private JButton startBtn, exporeBtn, drawBtn;
-    private JButton dataGeneratorBtn;
+    private JButton startBtn, exportBtn, drawBtn;
+    private JButton workloadGeneratorBtn;
     private JButton scriptSetterBtn;
     private JButton readSourceFileBtn;
     private JButton readEnvironmentFileBtn;
@@ -86,7 +87,7 @@ public class SimulationViewer extends JPanel
     private JRadioButton lcmRB, customRB;
     private DataReader dr;
     private Simulator sim;
-    private ExperimentResultPopupWin totalDataPopupWin;
+    private SimulationResultPopupWin experimentResultPopupWin;
     private ScriptSetter scriptSetter;
     
     public SimulationViewer(UserInterface ui)
@@ -96,7 +97,7 @@ public class SimulationViewer extends JPanel
         this.initialize();
         this.scriptSetter = new ScriptSetter(SimulationViewer.this);
         
-        this.dataGeneratorBtn.addMouseListener
+        this.workloadGeneratorBtn.addMouseListener
         (new MouseAdapter()
             {
                 public void mouseClicked(MouseEvent e)
@@ -177,16 +178,14 @@ public class SimulationViewer extends JPanel
                 public void mousePressed(MouseEvent e)
                 {
                    popupWin.setVisible(true);
-                   if(totalDataPopupWin != null)
+                   if(experimentResultPopupWin != null)
                    {
-                       totalDataPopupWin.setVisible(false);
+                       experimentResultPopupWin.setVisible(false);
                    }
                 }
                 
                 public void mouseReleased(MouseEvent e)
                 {
-                    long time1,time2;
-                    time1 = System.currentTimeMillis();
                     try
                     {
                         setMagnificationFactor(accuracyField.getText());
@@ -194,7 +193,8 @@ public class SimulationViewer extends JPanel
                         dr = new DataReader();
                         dr.loadSource(workloadTextField.getText());
                         dr.loadSource(processorTextField.getText());
-                        sim = new Simulator(SimulationViewer.this);
+//                        sim = new Simulator(SimulationViewer.this);
+                        sim = new Simulator();
                         sim.setSimulationTime(getSimulationTime());
                         sim.setContextSwitchTime(getContextSwitchTime());
                         sim.setMigrationTime(getMigrationTime());
@@ -206,7 +206,7 @@ public class SimulationViewer extends JPanel
                         sim.getProcessor().setDVFSMethod(getDynamicVoltageScalingMethod(DVFSComboBox.getSelectedItem().toString()));
                         
                         dr.getDataSetting().getProcessor().showInfo();
-                        System.out.println("Workload:" + dr.getDataSetting().getTaskSet().getMaxProcessingSpeed());
+                        println("Workload:" + dr.getDataSetting().getTaskSet().getProcessingSpeed());
                         for(Task t : dr.getDataSetting().getTaskSet())
                         {
                             t.showInfo();
@@ -214,7 +214,7 @@ public class SimulationViewer extends JPanel
                         
                         sim.start();
                         
-                        totalDataPopupWin = new ExperimentResultPopupWin(SimulationViewer.this);
+                        experimentResultPopupWin = new SimulationResultPopupWin(SimulationViewer.this);
                     }
                     catch (Exception ex) 
                     {
@@ -224,9 +224,6 @@ public class SimulationViewer extends JPanel
                     }
                     
                     popupWin.dispose();
-                    
-                    time2 = System.currentTimeMillis();
-                    System.out.println("！！！！ Spend：" + (double)(time2-time1)/1000 + " second. ！！！！");
                 }
             }
         );
@@ -242,7 +239,7 @@ public class SimulationViewer extends JPanel
             }
         );
 
-        this.exporeBtn.addMouseListener
+        this.exportBtn.addMouseListener
         (new MouseAdapter()
             {
                 public void mouseClicked(MouseEvent e)
@@ -286,7 +283,7 @@ public class SimulationViewer extends JPanel
         JToolBar dataToolBar = new JToolBar();
         dataToolBar.setFloatable(false);
         JLabel dataLabel = new JLabel("Workload: ");
-        this.dataGeneratorBtn = new JButton("DataGenerator");
+        this.workloadGeneratorBtn = new JButton("Generator");
         this.readSourceFileBtn = new JButton("Open File...");
         this.workloadTextField = new JTextField();
         
@@ -305,7 +302,7 @@ public class SimulationViewer extends JPanel
             JToolBar toolBar2 = new JToolBar();
             toolBar2.setFloatable(false);
             toolBar2.add(this.readSourceFileBtn);
-            toolBar2.add(this.dataGeneratorBtn);
+            toolBar2.add(this.workloadGeneratorBtn);
             toolBar2.add(this.workloadTextField);
             
             dataToolBar.add(toolBar2,c);
@@ -355,7 +352,7 @@ public class SimulationViewer extends JPanel
         JLabel schedulerLabel = new JLabel("SchedulingAlgorithm: ");
         this.schedulingComboBox = new JComboBox<String>();
 
-        JLabel controllerLabel = new JLabel("CCProtocol: ");
+        JLabel controllerLabel = new JLabel("SynchronizationProtocol:");
         this.CCPComboBox = new JComboBox<String>();
 
         
@@ -499,8 +496,8 @@ public class SimulationViewer extends JPanel
         scheduleToolBar.add(this.drawBtn);
         this.drawBtn.setForeground(Color.BLUE);
 
-        this.exporeBtn = new JButton("Expore");
-        scheduleToolBar.add(this.exporeBtn);
+        this.exportBtn = new JButton("Export");
+        scheduleToolBar.add(this.exportBtn);
         
         this.scriptSetterBtn = new JButton("Script");
         scheduleToolBar.add(this.scriptSetterBtn);
@@ -514,99 +511,11 @@ public class SimulationViewer extends JPanel
         //popupWin.setVisible(true);
     }
     
-    public void startScript(Script script)
-    {
-        try
-        {
-            Vector<String> workloadFileNames = this.getFolderFile(script.getWorkloadSite());
-            //Vector<String> processorfileNames = this.getFolderFile(script.getProcessorSite());
-            String processorFileName = script.getProcessorSite();
-            
-            for(String workloadFileName : workloadFileNames)
-            {
-                System.out.println(script.getWorkloadSite()+"/"+workloadFileName + ".xml");
-            }
-            
-            System.out.println(processorFileName);
-            
-            
-            int i = 0;
-            
-            for(String workloadFileName : workloadFileNames)
-            {
-                System.out.println(script.getWorkloadSite()+"/"+workloadFileName + ".xml");
-                System.out.println(processorFileName);
-                dr = new DataReader();
-                dr.loadSource(script.getWorkloadSite()+"/"+workloadFileName + ".xml");
-                dr.loadSource(processorFileName);
-                sim = new Simulator(SimulationViewer.this);
-                sim.setSimulationTime
-                (
-                    Double.valueOf
-                    (
-                        Double.valueOf
-                        (
-                            script.getSimulationTime()
-                        )*magnificationFactor
-                    ).longValue()
-                );
-
-                sim.loadDataSetting(dr.getDataSetting());
-                sim.getProcessor().setSchedAlgorithm(getPrioritySchedulingAlgorithm(script.getSchedulingAlgorithm()));
-                sim.getProcessor().setPartitionAlgorithm(getPartitionAlgorithm(script.getPartitionAlgorithm()));
-                sim.getProcessor().setCCProtocol(getConcurrencyControlProtocol(script.getCCProtocol()));
-                sim.getProcessor().setDVFSMethod(getDynamicVoltageScalingMethod(script.getDVFSMethod()));
-
-                dr.getDataSetting().getProcessor().showInfo();
-                System.out.println("Workload:" + dr.getDataSetting().getTaskSet().getMaxProcessingSpeed());
-                for(Task t : dr.getDataSetting().getTaskSet())
-                {
-                    t.showInfo();
-                }
-
-                sim.start();
-
-            //setScriptResult---------{
-                {
-                    ScriptResult sr = new ScriptResult(script);
-                    sr.setWorkloadFile(workloadFileName);
-                    sr.setProcessorFile(processorFileName);
-                    
-                    MCRTsimMath math = new MCRTsimMath();
-                    for(Core c : sim.getProcessor().getAllCore())
-                    {
-                        sr.addPowerConsumption(math.changeDecimalFormat((double)c.getPowerConsumption()/magnificationFactor));
-                    }
-
-                    DataSetting ds = dr.getDataSetting();
-
-                    sr.setTaskCount(ds.getTaskSet().size());
-                    sr.setTotalJobCompeletedCount(ds.getTaskSet().getTotalJobCompletedNumber());
-                    sr.setTotalJobMissDeadlineCount(ds.getTaskSet().getTotalJobMissDeadlineNumber());
-                    sr.setTotalPendingTime(ds.getTaskSet().getTotalJobPendingTime());
-                    sr.setTotalResponseTime(ds.getTaskSet().getTotalJobResponseTime());
-
-                    script.addScriptResult(sr);
-                }
-            //------------------------}
-                
-                System.out.println("~~~~~~~ "+(++i)+" ~~~~~~~");
-                System.out.println("");
-            }
-        }
-        catch (Exception ex) 
-        {
-            popupWin.dispose();
-            JOptionPane.showMessageDialog(parent.getFrame(), "Error!!" ,"Error!!" ,WARNING_MESSAGE);
-            Logger.getLogger(SimulationViewer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
     private void setComboBox()
     {
         
         String path = MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        System.out.println("" + MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        println("" + MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         //IDE : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/build/classes/
         //jar : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/dist/MCRTsim2.0.jar
         
@@ -619,7 +528,7 @@ public class SimulationViewer extends JPanel
             {
                 String fileContent = IOUtils.toString(is, "UTF-8");
                 String[] algorithmType = fileContent.split("\r|\n");
-                //System.out.println(name[0]);
+                //println(name[0]);
 
                 for(int i = 0 ; i<algorithmType.length ; i++)
                 {
@@ -823,9 +732,9 @@ public class SimulationViewer extends JPanel
         return this.workloadTextField;
     }
     
-    public ExperimentResultPopupWin getTotalDataPopupWin()
+    public SimulationResultPopupWin getTotalDataPopupWin()
     {
-        return this.totalDataPopupWin;
+        return this.experimentResultPopupWin;
     }
     
     public JComboBox<String> getPartitionComboBox()
@@ -845,7 +754,7 @@ public class SimulationViewer extends JPanel
         return this.DVFSComboBox;
     }
     
-    private void setMagnificationFactor(String str)
+    public void setMagnificationFactor(String str)
     {
         String s = "##";
 
@@ -856,7 +765,7 @@ public class SimulationViewer extends JPanel
             magnificationFactor = Integer.valueOf(str);
             if(magnificationFactor < 0)
             {
-                magnificationFactor = 5;
+                magnificationFactor = 0;
             }
         }
         catch (Exception ex) 

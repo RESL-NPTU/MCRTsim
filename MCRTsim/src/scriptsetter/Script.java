@@ -17,6 +17,7 @@ public class Script
 {
     public ScriptTable parent;
     private String ID,workloadSite,processorSite,partitionAlgorithm,DVFSMethod,schedAlgorithm,CCProtocol,simulationTime;
+            
     private Vector<ScriptResult> scriptResultSet;
     private  MCRTsimMath math = new MCRTsimMath();
     
@@ -58,15 +59,6 @@ public class Script
         this.scriptResultSet.removeAllElements();
     }
     
-    public String outputResult()
-    {
-        String str = this.DVFSMethod+" "+this.partitionAlgorithm+" "+this.schedAlgorithm+" "+this.CCProtocol+"<br>";
-        for(ScriptResult sr : this.scriptResultSet)
-        {
-            str+=sr.outputResult()+"<br>";
-        }
-        return str;
-    }
     
     public void setWorkloadSite(String s)
     {
@@ -188,10 +180,10 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTaskCount();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getTaskCount());
         }
         
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));
     }
     
     public double getAveragePowerConsumption()
@@ -200,10 +192,10 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTotalPowerConsumption();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getTotalPowerConsumption());
         }
         
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());                
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
     }
     
     public double getAverageJobCompeletedCount()
@@ -212,10 +204,10 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTotalJobCompeletedCount();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getTotalJobCompeletedCount());
         }
         
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());                
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
     }
     
     public double getAverageJobMissDeadlineCount()
@@ -224,11 +216,36 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTotalJobMissDeadlineCount();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getTotalJobMissDeadlineCount());
         }
         
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());                
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
     }
+    
+    public double getAverageCompletedRatio()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getCompletedRatio());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
+    }
+    
+    public double getAverageDeadlineMissRatio()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getDeadlineMissRatio());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
+    }
+    
     
     public double getAveragePendingTime()
     {
@@ -236,11 +253,9 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTotalPendingTime();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getAveragePendingTime());
         }
-        
-        
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());                
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
     }
     
     public double getAverageResponseTime()
@@ -249,10 +264,69 @@ public class Script
         
         for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
         {
-            p += this.scriptResultSet.get(i).getTotalResponseTime();
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getAverageResponseTime());
         }
         
-        return math.changeDecimalFormat(p/this.scriptResultSet.size());                
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));                
     }
     
+    public double getAverageMaximumCriticalSectionRatio()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getMaximumCriticalSectionRatio());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));    
+    }
+    
+    public double getAverageActualCriticalSectionRatio()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getActualCriticalSectionRatio());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));    
+    }
+    
+    public double getAverageMaximumUtilization()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getMaximumUtilization());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size())); 
+    }
+    
+    public double getAverageActualUtilization()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getActualUtilization());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));    
+    }
+    
+    public double getAverageActualBeBlockedTimeRatio()
+    {
+        double p = 0;
+        
+        for(int i = 0 ; i<this.scriptResultSet.size() ; i++)
+        {
+            p = MCRTsimMath.add(p,this.scriptResultSet.get(i).getBeBlockedTimeRatio());
+        }
+        
+        return math.changeDecimalFormatFor5(MCRTsimMath.div(p,this.scriptResultSet.size()));  
+    }
 }

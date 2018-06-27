@@ -5,6 +5,8 @@
  */
 package WorkLoad;
 
+import java.util.Vector;
+
 
 /**
  *
@@ -15,7 +17,14 @@ public class CriticalSection implements Comparable
     private SharedResource useSharedResource; //使用資源
     private long relativeStartTime; //開始時間
     private long relativeEndTime; //結束時間
+    private long executionTime; //執行時間
+
     private int resourceID;
+    
+    private Nest nest = null;
+    private CriticalSection outsideCriticalSection=null;
+    private Vector<CriticalSection> innerCriticalSection = new Vector<CriticalSection>();
+    
     public CriticalSection()
     {
         this.useSharedResource = null;
@@ -63,11 +72,28 @@ public class CriticalSection implements Comparable
     public void setRelativeEndTime(long t)
     {
         this.relativeEndTime = t;
+        
+        this.executionTime = this.relativeEndTime - this.relativeStartTime;
     }
     
     public void setResourceID(int rID)
     {
         this.resourceID = rID;
+    }
+    
+    public void setNests(Nest n)
+    {
+        this.nest=n;
+    }
+    
+    public void addInnerCriticalSection(CriticalSection c)
+    {
+        innerCriticalSection.add(c);
+    }
+    
+    public void setOutsideCriticalSection(CriticalSection c)
+    {
+        outsideCriticalSection = c;
     }
     
     /*GetValue*/
@@ -86,8 +112,28 @@ public class CriticalSection implements Comparable
         return this.relativeEndTime;
     }
     
+    public long getExecutionTime()
+    {
+        return this.executionTime;
+    }
+    
     public int getResourceID()
     {
         return this.resourceID;
+    }
+    
+    public Nest getNsets()
+    {
+        return this.nest;
+    }
+    
+    public CriticalSection getInnerCriticalSection(int i)
+    {
+        return innerCriticalSection.get(i);
+    }
+    
+    public CriticalSection getOutsideCriticalSection()
+    {
+        return outsideCriticalSection;
     }
 }

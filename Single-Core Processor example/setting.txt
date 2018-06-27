@@ -1,0 +1,19 @@
+Partition Algorithm: None
+DVFS Method: CSMS,MS
+Scheduling Algorithm: RMS,DMS,FCFS
+Synchronization Protocol: NPCS,PIP,PCP,SRP
+
+or
+
+Partition Algorithm: None
+DVFS Method: CSMS,MS
+Scheduling Algorithm: EDF
+Synchronization Protocol: NPCS,DPCP,SRP
+
+or
+
+Partition Algorithm: None
+DVFS Method: BTS,BATS
+Scheduling Algorithm: EDF
+Synchronization Protocol: SRP
+

@@ -37,7 +37,7 @@ public class InfoWin extends JPanel
     public UserInterface parent;
     private JLabel message,timeMessage;
     private JTabbedPane tabbedPane = new JTabbedPane();
-    private JButton leftWinBtn,rightWinBtn ,btnZoomIn, btnZoomOut, timeLineBtn, totalDataWinBtn;
+    private JButton leftWinBtn,rightWinBtn ,btnZoomIn, btnZoomOut, timeLineBtn, experimentResultWinBtn;
     private DataSetting ds;
     private ResultViewer curResultViewer;
     
@@ -48,7 +48,7 @@ public class InfoWin extends JPanel
         this.setLayout(new BorderLayout()); 
         this.initialize();
         
-        this.totalDataWinBtn.addMouseListener
+        this.experimentResultWinBtn.addMouseListener
         (
             new MouseAdapter()
             {
@@ -192,7 +192,7 @@ public class InfoWin extends JPanel
         this.btnZoomOut= new JButton("Zoom Out");
         this.timeLineBtn= new JButton("Time Line");
         this.timeLineBtn.setForeground(Color.red);
-        this.totalDataWinBtn = new JButton("TotalDataWin");
+        this.experimentResultWinBtn = new JButton("Simulation Results");
         
         JToolBar WJTB = new JToolBar();
         JToolBar EJTB = new JToolBar();
@@ -207,7 +207,7 @@ public class InfoWin extends JPanel
         CJTB.add(this.btnZoomOut);
         CJTB.add(this.btnZoomIn);
         CJTB.add(this.timeLineBtn);
-        CJTB.add(this.totalDataWinBtn);
+        CJTB.add(this.experimentResultWinBtn);
         nPanel.add(WJTB,BorderLayout.WEST);
         nPanel.add(EJTB,BorderLayout.EAST);
         nPanel.add(CJTB,BorderLayout.CENTER);

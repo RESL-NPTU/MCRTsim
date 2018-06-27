@@ -5,18 +5,11 @@
  */
 package scriptsetter;
 
-import java.io.File;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 /**
@@ -58,6 +51,12 @@ public class XMLWriter
                     Element resultElement = doc.createElement("result");
                     resultElement.setAttribute("resultID",s.getID());
                     
+                    resultElement.setAttribute("maximumUtilization",String.valueOf(s.getAverageMaximumUtilization()));
+                    resultElement.setAttribute("actualUtilization",String.valueOf(s.getAverageActualUtilization()));
+                    
+                    resultElement.setAttribute("maximumCriticalSectionRatio",String.valueOf(s.getAverageMaximumCriticalSectionRatio()));
+                    resultElement.setAttribute("actualCriticalSectionRatio",String.valueOf(s.getAverageActualCriticalSectionRatio()));
+                    
                     resultElement.setAttribute("partitionAlgorithm",s.getPartitionAlgorithm());
                     resultElement.setAttribute("DVFSMethod",s.getDVFSMethod());
                     resultElement.setAttribute("schedulingAlgorithm",s.getSchedulingAlgorithm());
@@ -76,24 +75,27 @@ public class XMLWriter
                     element.appendChild(doc.createTextNode(String.valueOf(s.getNonSchedulableCount())));
                     resultElement.appendChild(element);
                     
-                    
                     element = doc.createElement("powerConsumption");
                     element.appendChild(doc.createTextNode(String.valueOf(s.getAveragePowerConsumption())));
                     resultElement.appendChild(element);
                     
-                    element = doc.createElement("jobCompeletedCount");
-                    element.appendChild(doc.createTextNode(String.valueOf(s.getAverageJobCompeletedCount())));
+                    element = doc.createElement("completedRatio");
+                    element.appendChild(doc.createTextNode(String.valueOf(s.getAverageCompletedRatio())));
                     resultElement.appendChild(element);
                     
-                    element = doc.createElement("jobMissDeadlineCount");
-                    element.appendChild(doc.createTextNode(String.valueOf(s.getAverageJobMissDeadlineCount())));
+                    element = doc.createElement("deadlineMissRatio");
+                    element.appendChild(doc.createTextNode(String.valueOf(s.getAverageDeadlineMissRatio())));
                     resultElement.appendChild(element);
                     
-                    element = doc.createElement("pendingTime");
+                    element = doc.createElement("beBlockedTimeRatio");
+                    element.appendChild(doc.createTextNode(String.valueOf(s.getAverageActualBeBlockedTimeRatio())));
+                    resultElement.appendChild(element);
+                    
+                    element = doc.createElement("averagePendingTime");
                     element.appendChild(doc.createTextNode(String.valueOf(s.getAveragePendingTime())));
                     resultElement.appendChild(element);
                     
-                    element = doc.createElement("responseTime");
+                    element = doc.createElement("averageResponseTime");
                     element.appendChild(doc.createTextNode(String.valueOf(s.getAverageResponseTime())));
                     resultElement.appendChild(element);
                     

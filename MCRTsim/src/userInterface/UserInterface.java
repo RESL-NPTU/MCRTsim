@@ -11,6 +11,7 @@ import javax.swing.JSplitPane;
 import userInterface.frontEnd.AttributeViewer;
 import userInterface.frontEnd.InfoWin;
 import userInterface.frontEnd.SimulationViewer;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -33,7 +34,7 @@ public class UserInterface
     
     private void initialize()
     {
-        this.frame = new JFrame("MCRTsim v2.0");
+        this.frame = new JFrame("MCRTsim v2.8");
         this.frame.setBounds(100, 100, 1000, 600);
         this.frame.setMinimumSize(new Dimension(1000, 600));
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,7 +57,7 @@ public class UserInterface
         
         atb=new AttributeViewer(this);
         bottomSplitPane.setBottomComponent(atb);      
-        System.out.println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
+        println(bottomSplitPane.getMinimumDividerLocation()+","+bottomSplitPane.getMaximumDividerLocation()+","+this.frame.getWidth());
         bottomSplitPane.setDividerLocation(450);
     }
     
@@ -89,12 +90,12 @@ public class UserInterface
         if(b)
         {
             
-            System.out.println("3"+","+this.bottomSplitPane.getWidth());
+            println("3"+","+this.bottomSplitPane.getWidth());
             this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth());
         }
         else
         {
-            System.out.println("4"+","+this.bottomSplitPane.getWidth() + "," + x);
+            println("4"+","+this.bottomSplitPane.getWidth() + "," + x);
             this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth() - x);
         }
         
@@ -103,19 +104,19 @@ public class UserInterface
     public void extendAttributeViewer()
     {
         int i = this.bottomSplitPane.getWidth()-this.bottomSplitPane.getDividerSize();
-        System.out.println(""+this.bottomSplitPane.getDividerLocation()+","+i);
+        println(""+this.bottomSplitPane.getDividerLocation()+","+i);
         
         if(this.bottomSplitPane.getDividerLocation() < this.bottomSplitPane.getWidth() -this.bottomSplitPane.getDividerSize()-5)
         {
-            System.out.println("1");
+            println("1");
             this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth());
         }
         else
         {
-            System.out.println("2");
+            println("2");
             this.bottomSplitPane.setDividerLocation(this.bottomSplitPane.getWidth()-200);
         }
-        //System.out.println(""+this.bottomSplitpane.getDividerLocation() + ","+this.frame.getWidth());
+        //println(""+this.bottomSplitpane.getDividerLocation() + ","+this.frame.getWidth());
     }
     
     public SimulationViewer getSimulationViewer()

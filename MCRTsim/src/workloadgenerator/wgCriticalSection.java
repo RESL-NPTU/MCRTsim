@@ -15,9 +15,9 @@ public class wgCriticalSection
     private final String criticalSectionHeader = "criticalSection";
     private final String resourceIDHeader = "resourceID";
     private final String startTimeHeader = "startTime";
-    private double startTime = 0;
+    private long startTime = 0;
     private final String endTimeHeader = "endTime";
-    private double endTime = 0;
+    private long endTime = 0;
     private wgResources resources;
     
     public wgCriticalSection(wgCriticalSectionSet p)
@@ -26,12 +26,12 @@ public class wgCriticalSection
     }
     
 /*setValue*/
-    public void setStartTime(double StartTime)
+    public void setStartTime(long StartTime)
     {
         this.startTime = StartTime;
     }
     
-    public void setEndTime(double EndTime)
+    public void setEndTime(long EndTime)
     {
         this.endTime = EndTime;
     }
@@ -42,34 +42,34 @@ public class wgCriticalSection
     }
     
 /*getValue*/    
-    public double getStartTime()
+    public long getStartTime()
     {
         return this.startTime;
     }
     
-    public double getEndTime()
+    public long getEndTime()
     {
         return this.endTime;
     }
     
-    public double getCriticalSectionTime()
+    public long getCriticalSectionTime()
     {
-        return (this.endTime - this.startTime);
+        return this.endTime - this.startTime;
     }
     
     public double exporeStartTime()
     {
-        return this.startTime / this.parent.parent.parent.parent.parent.exportAccuracy;
+        return wgMath.div(this.startTime , this.parent.parent.parent.parent.parent.criticalSectionAccuracy);
     }
     
     public double exporeEndTime()
     {
-        return this.endTime / this.parent.parent.parent.parent.parent.exportAccuracy;
+        return wgMath.div(this.endTime , this.parent.parent.parent.parent.parent.criticalSectionAccuracy);
     }
     
     public double exporeCriticalSectionTime()
     {
-        return (this.endTime - this.startTime) / this.parent.parent.parent.parent.parent.exportAccuracy;
+        return wgMath.div(this.endTime - this.startTime , this.parent.parent.parent.parent.parent.criticalSectionAccuracy);
     }
     
     public wgResources getResources()

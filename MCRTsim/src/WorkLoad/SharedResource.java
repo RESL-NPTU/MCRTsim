@@ -7,6 +7,7 @@ package WorkLoad;
 
 import WorkLoadSet.TaskSet;
 import java.util.Vector;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -16,15 +17,16 @@ public class SharedResource extends Vector<Resource>
 {
     private int ID;
     private TaskSet accessTaskSet;
-    private Vector<Job> waitQueue;
+    private Vector<Job> PIPQueue;
     private int idleResourceNum;
+    private boolean isGlobal = false;//for MSRP
     
     public SharedResource()
     {
         super();
         this.ID = 0;
         this.accessTaskSet = new TaskSet();
-        this.waitQueue = new Vector<Job>();
+        this.PIPQueue = new Vector<Job>();
         this.idleResourceNum = 0;
     }
     
@@ -68,29 +70,21 @@ public class SharedResource extends Vector<Resource>
             {
                 r.unlock();
                 this.idleResourceNum++;
-                this.releaseWaitQueueJob();
             }
         }
     }
     
-    private void releaseWaitQueueJob()
+    public void releasePIPQueueJob()
+    {   
+        this.PIPQueue.removeAllElements();
+    }
+    
+    public void addJob2PIPQueue(Job j)
     {
-        for(Job j : this.waitQueue)
-        {
-            if(j.getCurrentCore() != null)
-            {
-                j.getCurrentCore().JobToCore(j);///???
-            }
-            else
-            {
-                j.getLocalProcessor().JobArrives(j);///???
-            }
-        }
-        
-        this.waitQueue.removeAllElements();
+        this.PIPQueue.add(j);
     }
-    
-    public Job getWhoLockedLastResource(Job j)
+
+    public Job getWhoLockedLastResource(Job j)//between local and global resource 會有問題
     {
         for (int i = this.getResourcesAmount()-1 ; i>=0 ; i--)
         {
@@ -102,58 +96,71 @@ public class SharedResource extends Vector<Resource>
         return null;
     }
     
-    public void blockedJob(Job j)
-    {
-        this.waitQueue.add(j);
-        if(j.getCurrentCore() != null && j.getCurrentCore().getLocalReadyQueue().contains(j))
-        {
-            j.getCurrentCore().getLocalReadyQueue().remove(j);
-        }
-        
-        if(j.getLocalProcessor() != null && j.getLocalProcessor().getGlobalReadyQueue().contains(j))
-        {
-            j.getLocalProcessor().getGlobalReadyQueue().remove(j);
-        }
-    }
     
-    public boolean isGlobal()
+    public void setIsGlobal()//for MSRP
     {
-        for(int i = 0; i < this.accessTaskSet.size() - 1; i++)
+        //isGlobal預設是false
+        for(int i = 0; i < this.accessTaskSet.size()-1; i++)
         {
             if(this.accessTaskSet.get(i).getLocalCore() != null)
             {
                 for(int j = i + 1; j < this.accessTaskSet.size(); j++)
                 {
-                    if(this.accessTaskSet.get(j).getLocalCore() != null)
+                    if(this.accessTaskSet.get(j).getLocalCore() == null 
+                    || this.accessTaskSet.get(i).getLocalCore() != this.accessTaskSet.get(j).getLocalCore())
                     {
-                        if(this.accessTaskSet.get(i).getLocalCore() != this.accessTaskSet.get(j).getLocalCore())
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        return true;
+                        isGlobal = true;
+                        break;
                     }
                 }
             }
             else
             {
-                return true;
+                isGlobal = true;
+                break;
             }
         }
-        return false;
+        
+    }
+    public boolean isGlobal()//for MSRP
+    {
+        return this.isGlobal;
+//        for(int i = 0; i < this.accessTaskSet.size() - 1; i++)
+//        {
+//            if(this.accessTaskSet.get(i).getLocalCore() != null)
+//            {
+//                for(int j = i + 1; j < this.accessTaskSet.size(); j++)
+//                {
+//                    if(this.accessTaskSet.get(j).getLocalCore() != null)
+//                    {
+//                        if(this.accessTaskSet.get(i).getLocalCore() != this.accessTaskSet.get(j).getLocalCore())
+//                        {
+//                            return true;
+//                        }
+//                    }
+//                    else
+//                    {
+//                        return true;
+//                    }
+//                }
+//            }
+//            else
+//            {
+//                return true;
+//            }
+//        }
+//        return false;
     }
     
     public void showInfo()
     {
-        System.out.println("Resource(" + this.ID + "):");
-        System.out.println("    AccessSet:");
+        println("Resource(" + this.ID + "):");
+        println("    AccessSet:");
         for(Task t : this.accessTaskSet)
         {
-            System.out.println("        Task(" + t.getID() + ")");
+            println("        Task(" + t.getID() + ")");
         }
-        System.out.println();
+        println();
     }
     
     public void setID(int id)
@@ -166,14 +173,9 @@ public class SharedResource extends Vector<Resource>
         return this.ID;
     }
     
-    public Vector<Job> getWaitQueue()
+    public Vector<Job> getPIPQueue()
     {
-        return this.waitQueue;
-    }
-    
-    public Job getWaitQueue(int i)
-    {
-        return this.waitQueue.get(i);
+        return this.PIPQueue;
     }
     
     public Resource getResource(int i)
@@ -207,5 +209,6 @@ public class SharedResource extends Vector<Resource>
             }
         }
         return i ;
+        
     }
 }

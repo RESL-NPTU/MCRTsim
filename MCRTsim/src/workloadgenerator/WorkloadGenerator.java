@@ -4,28 +4,24 @@
  * and open the template in the editor.
  */
 
-//加兩個按鈕在這裡
 package workloadgenerator;
+import static mcrtsim.MCRTsim.println;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -34,8 +30,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import userInterface.frontEnd.SimulationViewer;
-import java.awt.event.ItemEvent;  
-import java.awt.event.ItemListener;  
 
 /**
  *
@@ -44,28 +38,30 @@ import java.awt.event.ItemListener;
 public class WorkloadGenerator extends JFrame
 {
     public SimulationViewer parent;
-    private wgWorkload workload;
-    public  int accuracy = 100;
-    public  int exportAccuracy = 100;
+    public  int taskAccuracy = 100;
+    public  int criticalSectionAccuracy = 1000;
+    
     private JTextField utilization;
     private JTextField MinNumOftask, MaxNumOftask;
     private JTextField Minperiod , Maxperiod;
     private JTextField MincomputationTime , MaxcomputationTime;
     private JTextField MinNumOfresources, MaxNumOfresources;
     private JTextField MinNumOfaccessedResources, MaxNumOfaccessedResources;
-    private JTextField csr;
+    private JTextField minCSR,maxCSR;
     private JTextField frequency;
-    private ButtonGroup unit;
-    private JRadioButton msRB,sRB;
+    private JTextField taskAccuracyTextField;
+    private JTextField criticalSectionAccuracyTextField;
     private JButton creatBtn;
-    private JCheckBox jCB;   
+    private JCheckBox jCB;
+    
+    private boolean repeatCreate = false;
+    private JTextField numWorkload;
     
     public WorkloadGenerator(SimulationViewer p)
     {
         this.parent = p;
         this.init();
         this.revalidate();
-        
 
         this.creatBtn.addMouseListener
         (new MouseAdapter()
@@ -77,14 +73,18 @@ public class WorkloadGenerator extends JFrame
                     
                     while(!quit)
                     {
-                        workload = new wgWorkload(WorkloadGenerator.this);
+                        wgWorkload workload = new wgWorkload(WorkloadGenerator.this);
+                        
                         try 
                         {
+                            taskAccuracy = (int) Math.pow(10,Integer.valueOf(taskAccuracyTextField.getText()));
+                            criticalSectionAccuracy = (int) Math.pow(10,Integer.valueOf(criticalSectionAccuracyTextField.getText()));
+                            
                             workload.setUtilization(Double.valueOf(utilization.getText()));
-                            workload.setTaskPeriodMin(Double.valueOf(Minperiod.getText()) * accuracy);
-                            workload.setTaskPeriodMax(Double.valueOf(Maxperiod.getText()) * accuracy);
-                            workload.setTaskComputationTimeMin(Double.valueOf(MincomputationTime.getText()) * accuracy);
-                            workload.setTaskComputationTimeMax(Double.valueOf(MaxcomputationTime.getText()) * accuracy);
+                            workload.setTaskPeriodMin((long)(Double.valueOf(Minperiod.getText()) * taskAccuracy));
+                            workload.setTaskPeriodMax((long)(Double.valueOf(Maxperiod.getText()) * taskAccuracy));
+                            workload.setTaskComputationTimeMin((long)(Double.valueOf(MincomputationTime.getText()) * taskAccuracy));
+                            workload.setTaskComputationTimeMax((long)(Double.valueOf(MaxcomputationTime.getText()) * taskAccuracy));
                             workload.setTaskNumberMin(Integer.valueOf(MinNumOftask.getText()));
                             workload.setTaskNumberMax(Integer.valueOf(MaxNumOftask.getText()));
                             workload.setTaskNumber();
@@ -93,7 +93,8 @@ public class WorkloadGenerator extends JFrame
                             workload.setResourcesNumber();
                             workload.setAccessedResourceNumberMax(Integer.valueOf(MaxNumOfaccessedResources.getText()));
                             workload.setAccessedResourceNumberMin(Integer.valueOf(MinNumOfaccessedResources.getText()));
-                            workload.setCriticalSectionRatio(Double.valueOf(csr.getText()));
+                            workload.setMinCriticalSectionRatio(Double.valueOf(minCSR.getText()));
+                            workload.setMaxCriticalSectionRatio(Double.valueOf(maxCSR.getText()));
                             workload.setFrequency(Integer.valueOf(frequency.getText()));
                             workload.showInitInfo();
                             workload.creatResources();
@@ -101,11 +102,13 @@ public class WorkloadGenerator extends JFrame
                             workload.creatCriticalSection();
                             workload.showInfo();
                             
+                            
                                                /*0,1,2*/
-                            Object[] options ={ "Save","Again","Cancel"};  
-                            int option = JOptionPane.showOptionDialog(null, new JLabel(workload.checkQuality()), "Workload Quality",JOptionPane.YES_NO_CANCEL_OPTION,
+                            Object[] options ={ "Save","Re-generate","Cancel"};  
+                            int option = JOptionPane.showOptionDialog(null, new JLabel(workload.showQuality()), "Confirmation",JOptionPane.YES_NO_CANCEL_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]); 
-//                   int   option =1;//迴圈測試
+//
+//                            int option =1;
                             switch(option)
                             {
                                 case 0:
@@ -118,18 +121,29 @@ public class WorkloadGenerator extends JFrame
                                         break;
                                     }
                                     
-                                    
-                                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
-                                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                                    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-                                    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); 
+                                    if(repeatCreate)
+                                    {
+                                        for(int i=0 ; i<Integer.valueOf(numWorkload.getText()) ; i++)
+                                        {
+                                            if(!repeatCreateWorkload(fileDialog))
+                                            {
+                                                i--;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                                        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                                        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+                                        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); 
 
-                                    DOMSource source = new DOMSource(XMLWriter.creatXML(workload));
-                                    File file = new File(fileDialog.getDirectory()+fileDialog.getFile()+".xml");
-                                    StreamResult result = new StreamResult(file);
-                                    transformer.transform(source, result);
-                                    WorkloadGenerator.this.parent.getSourceTextField().setText(file.getAbsolutePath());
-                                    
+                                        DOMSource source = new DOMSource(XMLWriter.creatXML(workload));
+                                        File file = new File(fileDialog.getDirectory()+fileDialog.getFile()+".xml");
+                                        StreamResult result = new StreamResult(file);
+                                        transformer.transform(source, result);
+                                        WorkloadGenerator.this.parent.getSourceTextField().setText(file.getAbsolutePath());
+                                    }
                                 break;
                                 
                                 case 1:
@@ -145,7 +159,7 @@ public class WorkloadGenerator extends JFrame
 
                             }
                             workload = null;
-                            System.out.println("File saved!");
+                            println("File saved!");
                         }
                         catch (TransformerException ex) 
                         {
@@ -160,12 +174,12 @@ public class WorkloadGenerator extends JFrame
     private void init() 
     {
         this.setTitle("Workload Generator");
-        this.setBounds(100, 100, 600, 280);
-        this.setMinimumSize(new Dimension(600, 280));
+        this.setBounds(100, 100, 600, 400);
+        this.setMinimumSize(new Dimension(600, 400));
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
         this.setLayout(new GridBagLayout());
-        
+        println("");
         utilization = new JTextField();
         MinNumOftask = new JTextField();
         MaxNumOftask = new JTextField();
@@ -177,81 +191,16 @@ public class WorkloadGenerator extends JFrame
         MaxNumOfresources = new JTextField();
         MinNumOfaccessedResources = new JTextField();
         MaxNumOfaccessedResources = new JTextField();
-        csr = new JTextField();
+        minCSR = new JTextField();
+        maxCSR = new JTextField();
         frequency = new JTextField();
-        creatBtn = new JButton("Creat");      
-        sRB = new JRadioButton(" s");
-        sRB.setSelected(true);
-        msRB = new JRadioButton(" ms");
-        unit = new ButtonGroup();
-        unit.add(msRB);
-        unit.add(sRB);
-        jCB = new JCheckBox("ExtraTask",false);
+        creatBtn = new JButton("Create");      
+        taskAccuracyTextField = new JTextField();
+        criticalSectionAccuracyTextField = new JTextField();
+        jCB = new JCheckBox("Extra Task",false);
        
-        sRB.addItemListener
-        (
-            new ItemListener()
-            {
-                public void itemStateChanged(ItemEvent e) 
-                {
-                    if (e.getStateChange() == ItemEvent.SELECTED) 
-                    {
-//                        double mp = Double.parseDouble(Minperiod.getText());
-//                        Minperiod.setText(String.valueOf(mp/1000));
-//                        double Mp = Double.parseDouble(Maxperiod.getText());
-//                        Maxperiod.setText(String.valueOf(Mp/1000));
-//                        double mc = Double.parseDouble(MincomputationTime.getText());
-//                        MincomputationTime.setText(String.valueOf(mc/1000));
-//                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
-//                        MaxcomputationTime.setText(String.valueOf(Mc/1000));
-//                        
-//                        WorkloadGenerator.this.accuracy = 1000;
-                        
-                    }
-                    else if (e.getStateChange() == ItemEvent.DESELECTED) 
-                    {
-                        // Your deselected code here.
-                    }
-                }
-            }
-        );
-        
-        msRB.addItemListener
-        (
-            new ItemListener()
-            {
-                public void itemStateChanged(ItemEvent e) 
-                {
-                    if (e.getStateChange() == ItemEvent.SELECTED) 
-                    {
-//                        double mp = Double.parseDouble(Minperiod.getText());
-//                        Minperiod.setText(String.valueOf(mp*1000));
-//                        double Mp = Double.parseDouble(Maxperiod.getText());
-//                        Maxperiod.setText(String.valueOf(Mp*1000));
-//                        double mc = Double.parseDouble(MincomputationTime.getText());
-//                        MincomputationTime.setText(String.valueOf(mc*1000));
-//                        double Mc = Double.parseDouble(MaxcomputationTime.getText());
-//                        MaxcomputationTime.setText(String.valueOf(Mc*1000));
-                        
-                        WorkloadGenerator.this.accuracy = 1;
-                    }
-                    else if (e.getStateChange() == ItemEvent.DESELECTED) 
-                    {
-                        // Your deselected code here.
-                    }
-                }
-            }
-        );
-        
         GridBagConstraints bag = new GridBagConstraints();
         bag.anchor=GridBagConstraints.WEST;        
-//        bag.gridx = 0;
-//        bag.gridy = 0;          
-//        this.add(sRB,bag);       
-//        bag.gridx = 0;
-//        bag.gridy = 1;     
-//        this.add(msRB,bag);
-        
         
         bag.anchor = GridBagConstraints.CENTER;  
         bag.fill = GridBagConstraints.NONE;
@@ -269,8 +218,8 @@ public class WorkloadGenerator extends JFrame
         bag.gridy = 0;
         this.add(new JLabel("       Max       "), bag);
         
-        String[] str  ={"Utilization","The Number of Task" ,"Period","Computation Time","The Number of Resources"
-                        ,"The Number of Accessed Resources","Critical Section Ratio","Base Speed"};
+        String[] str  ={"Utilization","The Number of Tasks" ,"Period","Computation Amount","The Number of Resources"
+                        ,"The Number of Accessed Resources","Critical Section Ratio","Base Speed","Task Accuracy","Critical Section Accuracy"};
         
         bag.gridx = 0;
         bag.anchor = GridBagConstraints.EAST;
@@ -283,7 +232,7 @@ public class WorkloadGenerator extends JFrame
         bag.anchor=GridBagConstraints.WEST;
         bag.gridx = 3;
         bag.gridy = 2;     
-        this.add(jCB,bag);
+        //this.add(jCB,bag);
         
         bag.anchor = GridBagConstraints.CENTER;
         bag.fill = GridBagConstraints.HORIZONTAL;
@@ -331,38 +280,130 @@ public class WorkloadGenerator extends JFrame
         bag.gridy = 6;
         this.add(MaxNumOfaccessedResources, bag);
         
+        
+        bag.gridx = 1;
+        bag.gridy = 7;
+        this.add(minCSR, bag);
+        
         bag.gridx = 2;
         bag.gridy = 7;
-        this.add(csr, bag);
+        this.add(maxCSR, bag);
         
         bag.gridx = 2;
         bag.gridy = 8;
         this.add(frequency,bag);
         
-        
-        this.utilization.setText("1.0");
-        this.MinNumOftask.setText("4");
-        this.MaxNumOftask.setText("7");
-        this.Minperiod.setText("4");
-        this.Maxperiod.setText("10.0");
-        this.MincomputationTime.setText("1.0");
-        this.MaxcomputationTime.setText("5.0");
-        this.MinNumOfresources.setText("2");
-        this.MaxNumOfresources.setText("5");
-        this.MinNumOfaccessedResources.setText("1");
-        this.MaxNumOfaccessedResources.setText("3");
-        this.csr.setText("0.6");
-        this.frequency.setText("300");
-        
         bag.gridx = 2;
         bag.gridy = 9;
+        this.add(taskAccuracyTextField,bag);
+        
+        bag.gridx = 2;
+        bag.gridy = 10;
+        this.add(criticalSectionAccuracyTextField,bag);
+        
+        
+        this.utilization.setText("0.8");
+        this.MinNumOftask.setText("10");
+        this.MaxNumOftask.setText("30");
+        this.Minperiod.setText("0.5");
+        this.Maxperiod.setText("5");
+        this.MincomputationTime.setText("0.001");
+        this.MaxcomputationTime.setText("0.1");
+        this.MinNumOfresources.setText("5");
+        this.MaxNumOfresources.setText("5");
+        this.MinNumOfaccessedResources.setText("0");
+        this.MaxNumOfaccessedResources.setText("5");
+        this.minCSR.setText("0.4");
+        this.maxCSR.setText("0.5");
+        this.frequency.setText("624");
+        this.taskAccuracyTextField.setText("3");
+        this.criticalSectionAccuracyTextField.setText("4");
+        
+        
+        if(repeatCreate)
+        {
+            bag.gridx = 1;
+            bag.gridy = 11;
+            this.numWorkload = new JTextField(); 
+            this.add(this.numWorkload,bag);
+            
+            this.numWorkload.setText("10");
+        }
+
+        bag.gridx = 2;
+        bag.gridy = 11;
         creatBtn.setForeground(Color.red);
         this.add(creatBtn, bag);
+        
+        
+        
+    }
+    
+    private boolean repeatCreateWorkload(FileDialog fileDialog)
+    {
+        wgWorkload workload = new wgWorkload(WorkloadGenerator.this);
+                        
+        try 
+        {
+            workload.setUtilization(Double.valueOf(utilization.getText()));
+            workload.setTaskPeriodMin((long)(Double.valueOf(Minperiod.getText()) * taskAccuracy));
+            workload.setTaskPeriodMax((long)(Double.valueOf(Maxperiod.getText()) * taskAccuracy));
+            workload.setTaskComputationTimeMin((long)(Double.valueOf(MincomputationTime.getText()) * taskAccuracy));
+            workload.setTaskComputationTimeMax((long)(Double.valueOf(MaxcomputationTime.getText()) * taskAccuracy));
+            workload.setTaskNumberMin(Integer.valueOf(MinNumOftask.getText()));
+            workload.setTaskNumberMax(Integer.valueOf(MaxNumOftask.getText()));
+            workload.setTaskNumber();
+            workload.setResourcesNumbermin(Integer.valueOf(MinNumOfresources.getText()));
+            workload.setResourcesNumbermax(Integer.valueOf(MaxNumOfresources.getText()));
+            workload.setResourcesNumber();
+            workload.setAccessedResourceNumberMax(Integer.valueOf(MaxNumOfaccessedResources.getText()));
+            workload.setAccessedResourceNumberMin(Integer.valueOf(MinNumOfaccessedResources.getText()));
+            workload.setMinCriticalSectionRatio(Double.valueOf(minCSR.getText()));
+            workload.setMaxCriticalSectionRatio(Double.valueOf(maxCSR.getText()));
+            workload.setFrequency(Integer.valueOf(frequency.getText()));
+            workload.showInitInfo();
+            workload.creatResources();
+            workload.creatTask();
+            workload.creatCriticalSection();
+            workload.showInfo();
+
+            if(workload.checkQuality())
+            {   
+                Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); 
+
+                DOMSource source = new DOMSource(XMLWriter.creatXML(workload));
+                
+                File file = new File(fileDialog.getDirectory()+fileDialog.getFile()+'1'+".xml");
+                
+                for (int i = 1; file.exists() ; i++) 
+                {
+                    file = new File(fileDialog.getDirectory(), fileDialog.getFile() + i +".xml");
+                }
+                
+                StreamResult result = new StreamResult(file);
+                transformer.transform(source, result);
+                WorkloadGenerator.this.parent.getSourceTextField().setText(file.getAbsolutePath());
+            
+                println("File saved!");
+                return true;
+            }
+        }
+        catch (TransformerException ex) 
+        {
+            Logger.getLogger(WorkloadGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        
+        return false;
     }
     
     public boolean isExtraTask()
     {
         return this.jCB.isSelected();
     }
+    
     
 }

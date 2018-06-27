@@ -14,6 +14,7 @@ import WorkLoadSet.DataSetting;
 import java.util.Iterator;
 import mcrtsim.Definition.DVFSType;
 import static mcrtsim.Definition.magnificationFactor;
+import static mcrtsim.MCRTsim.println;
 import mcrtsim.MCRTsimMath;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -55,7 +56,7 @@ public class DataReader
             }
             default:
             {
-                System.out.println("You loaded source is not supported(It's not Workload or Processor):" + this.root.getName().toString());
+                println("You loaded source is not supported(It's not Workload or Processor):" + this.root.getName().toString());
             }
         }
     }
@@ -64,7 +65,20 @@ public class DataReader
     private void createWorkload()
     {
         Iterator it = root.elementIterator();
-        this.dataSetting.getTaskSet().setMaxProcessingSpeed(Double.valueOf(this.root.attribute("baseSpeed").getText()));
+        this.dataSetting.getTaskSet().setProcessingSpeed(Double.valueOf(this.root.attribute("baseSpeed").getText()));
+        try
+        {
+            this.dataSetting.getTaskSet().setMaximumCriticalSectionRatio(Double.valueOf(this.root.attribute("maximumCriticalSectionRatio").getText()));
+            this.dataSetting.getTaskSet().setActualCriticalSectionRatio(Double.valueOf(this.root.attribute("actualCriticalSectionRatio").getText()));
+            this.dataSetting.getTaskSet().setMaximumUtilization(Double.valueOf(this.root.attribute("maximumUtilization").getText()));
+            this.dataSetting.getTaskSet().setActualUtilization(Double.valueOf(this.root.attribute("actualUtilization").getText()));
+        }
+        catch(Exception e)
+        {
+            
+        }
+        
+        
         while(it.hasNext())
         {
             Element typeElement = (Element)it.next();
@@ -84,6 +98,8 @@ public class DataReader
                 }
             }
         }
+        
+        this.dataSetting.getTaskSet().setNestSetForTask();
     }
     
     private void createSharedResource(Element re)
@@ -120,6 +136,7 @@ public class DataReader
                 task.addCriticalSection(cs);
             }
         }
+        task.setTotalCriticalSectionTime();
         task.setParentTaskSet(this.dataSetting.getTaskSet());
         this.dataSetting.addTask(task);
     }
@@ -163,7 +180,7 @@ public class DataReader
                         break;
                     }
                     default:
-                        System.out.println("SetCoreAttribute Error!!");
+                        println("SetCoreAttribute Error!!");
                 }
             }
             
@@ -186,7 +203,7 @@ public class DataReader
                     }
                     default:
                     {
-                        System.out.println("SeetCoreAttribute Error!!");
+                        println("SeetCoreAttribute Error!!");
                     }
                 }
             }
@@ -205,7 +222,7 @@ public class DataReader
                 this.dataSetting.getProcessor().addCoreSet(coreSet);
             }
         }
-        System.out.println("!!!!!CoreSet::" + this.dataSetting.getProcessor().getCoresSets().size());
+        println("!!!!!CoreSet::" + this.dataSetting.getProcessor().getCoresSets().size());
     }
     
     private void setPowerConsumptionFunction(Element e ,CoreSet coreSet)
@@ -226,7 +243,7 @@ public class DataReader
                     coreSet.setGammaValue(Double.valueOf(PCFatb.getText()));
                     break;
                 default:
-                    System.out.println("setPowerConsumptionFunction Error!!!!!");
+                    println("setPowerConsumptionFunction Error!!!!!");
             }
         }
     }
@@ -258,7 +275,7 @@ public class DataReader
                         s.setPowerConsumption(Double.valueOf(atb.getText()));
                     break;
                     default:
-                        System.out.println("setAvailableSpeed Error!!!");
+                        println("setAvailableSpeed Error!!!");
                 }
             }
             

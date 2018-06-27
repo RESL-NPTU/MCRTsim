@@ -14,8 +14,8 @@ import WorkLoad.Priority;
 public class Definition
 {
     public static final Priority Ohm = new Priority(Long.MAX_VALUE);
-    public static long magnificationFactor = 100000;
-    public static String magnificationFormat = "##.00000";//格式
+    public static long magnificationFactor = 1;
+    public static String magnificationFormat = "##.#####";//格式
     
     
     public enum CoreStatus
@@ -25,7 +25,7 @@ public class Definition
     
     public enum JobStatus
     {
-        NONCOMPUTE,COMPUTING,COMPLETED,MISSDEADLINE,
+        NONCOMPUTE,COMPUTING,COMPLETED,MISSDEADLINE
     }
     
     public enum DVFSType

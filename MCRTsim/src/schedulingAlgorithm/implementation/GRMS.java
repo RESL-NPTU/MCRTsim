@@ -29,7 +29,7 @@ public class GRMS extends GlobalSchedulingAlgorithm
     {
         for(Task t : ts)
         {
-            t.setPriority(new Priority(Long.valueOf(t.getPeriod()).intValue())); 
+            t.setPriority(new Priority(t.getPeriod())); 
         }
     }
 

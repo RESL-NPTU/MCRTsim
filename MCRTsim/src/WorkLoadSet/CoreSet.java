@@ -8,7 +8,8 @@ package WorkLoadSet;
 import SystemEnvironment.*;
 import WorkLoad.CoreSpeed;
 import java.util.Vector;
-import mcrtsim.Definition;
+import static mcrtsim.MCRTsim.println;
+import mcrtsim.MCRTsimMath;
 
 /**
  *
@@ -37,6 +38,7 @@ public class CoreSet extends Vector<Core>
         this.alpha = 0;
         this.beta = 0;
         this.gamma = 0;
+        this.hasPowerConsumptionFunction = false;
         this.isIdeal = false;
     }
     
@@ -51,6 +53,7 @@ public class CoreSet extends Vector<Core>
         this.beta = cSet.getBetaValue();
         this.gamma = cSet.getGammaValue();
         this.isIdeal = cSet.isIdeal;
+        this.hasPowerConsumptionFunction = cSet.hasPowerConsumptionFunction;
         
         for(CoreSpeed cSpeed : cSet.getCoreSpeedSet())
         {
@@ -98,7 +101,7 @@ public class CoreSet extends Vector<Core>
         }
         else
         {
-            System.out.println("CoreType Error!!!!!");
+            println("CoreType Error!!!!!");
         }
     }
     
@@ -167,13 +170,13 @@ public class CoreSet extends Vector<Core>
     {
         if(this.isIdeal)
         {
-            this.currentPowerConsumption = (this.alpha + (this.beta * Math.pow(this.currentSpeed, this.gamma) ) );
+            this.currentPowerConsumption = MCRTsimMath.mul((this.alpha + (this.beta * Math.pow(MCRTsimMath.div(this.currentSpeed, 1000), this.gamma) ) ),1000);
         }
         else
         {
             if(this.hasPowerConsumptionFunction)
             {
-                this.currentPowerConsumption = (this.alpha + (this.beta * Math.pow(this.currentSpeed, this.gamma) ) );
+                this.currentPowerConsumption = MCRTsimMath.mul((this.alpha + (this.beta * Math.pow(MCRTsimMath.div(this.currentSpeed, 1000), this.gamma) ) ),1000);
             }
             else
             {
@@ -188,7 +191,7 @@ public class CoreSet extends Vector<Core>
                 }
                 if(!isFound)//檢查是否取得相對應的 PowerConsumption
                 {
-                    System.out.println("Not found PowerConsumption of Speed");
+                    println("Not found PowerConsumption of Speed");
                     this.currentPowerConsumption = -1;
                 }
             }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<workload baseSpeed="1000" numResource="0" numTask="5">
+    <resources ID="1" quantity="1"/>
+    <resources ID="2" quantity="1"/>
+    <resources ID="3" quantity="1"/>
+    <resources ID="4" quantity="1"/>
+    <resources ID="5" quantity="1"/>
+    <resources ID="6" quantity="1"/>
+    <task ID="1" type="periodic">
+        <arrivalTime>0</arrivalTime>
+        <period>23.0</period>
+        <relativeDeadline>23</relativeDeadline>
+        <computationAmount>3.5</computationAmount>
+        <criticalSections>
+            <criticalSection endTime="2.5" resourceID="1" startTime="0.5"/>
+            <criticalSection endTime="2.0" resourceID="2" startTime="1.5"/>
+        </criticalSections>
+    </task>
+    <task ID="2" type="periodic">
+        <arrivalTime>0</arrivalTime>
+        <period>22.0</period>
+        <relativeDeadline>22</relativeDeadline>
+        <computationAmount>6.5</computationAmount>
+        <criticalSections>
+            <criticalSection endTime="3.5" resourceID="6" startTime="0.5"/>
+            <criticalSection endTime="2.0" resourceID="2" startTime="1.0"/>
+            <criticalSection endTime="5.5" resourceID="3" startTime="3.5"/>
+        </criticalSections>
+    </task>
+    <task ID="3" type="periodic">
+        <arrivalTime>1.5</arrivalTime>
+        <period>19.5</period>
+        <relativeDeadline>19.5</relativeDeadline>
+        <computationAmount>2.5</computationAmount>
+        <criticalSections>
+            <criticalSection endTime="2.5" resourceID="6" startTime="2"/>
+        </criticalSections>
+    </task>
+    <task ID="4" type="periodic">
+        <arrivalTime>4</arrivalTime>
+        <period>16</period>
+        <relativeDeadline>16</relativeDeadline>
+        <computationAmount>5</computationAmount>
+        <criticalSections>
+            <criticalSection endTime="3.5" resourceID="6" startTime="1"/>
+            <criticalSection endTime="2.5" resourceID="4" startTime="1.5"/>
+        </criticalSections>
+    </task>
+    <task ID="5" type="periodic">
+        <arrivalTime>4</arrivalTime>
+        <period>16</period>
+        <relativeDeadline>16</relativeDeadline>
+        <computationAmount>3</computationAmount>
+        <criticalSections>
+            <criticalSection endTime="2" resourceID="5" startTime="1"/>
+        </criticalSections>
+    </task>
+    
+
+</workload>

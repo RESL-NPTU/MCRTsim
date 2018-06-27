@@ -10,6 +10,7 @@ import SystemEnvironment.Core;
 import WorkLoad.Task;
 import WorkLoadSet.TaskSet;
 import java.util.Vector;
+import mcrtsim.Definition.SchedulingType;
 
 /**
  *
@@ -25,9 +26,14 @@ public class None extends PartitionAlgorithm
     @Override
     public void taskToCore(Vector<Core> cores, TaskSet taskSet) 
     {
-        for(Task t : taskSet)
+        SchedulingType schedulingType = cores.get(0).getParentProcessor().getSchedulingAlgorithm().getSchedulingType();
+        
+        if(schedulingType == SchedulingType.SingleCore || schedulingType == SchedulingType.Partition)
         {
-            cores.get(0).addTask(t);
+            for(Task t : taskSet)
+            {
+                cores.get(0).addTask(t);
+            }
         }
     }
     

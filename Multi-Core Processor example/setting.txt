@@ -1,0 +1,16 @@
+The Example of Partitioned Scheduling
+
+Partition Algorithm: One of All Algorithms
+DVFS Method: MS
+Scheduling Algorithm: PRMS,PDMS,PFCFS,PEDF,PLST
+Synchronization Protocol: MSRP
+
+
+or
+
+The Example of Global Scheduling
+
+Partition Algorithm: None
+DVFS Method: None
+Scheduling Algorithm: GEDF
+Synchronization Protocol: G_FMLP

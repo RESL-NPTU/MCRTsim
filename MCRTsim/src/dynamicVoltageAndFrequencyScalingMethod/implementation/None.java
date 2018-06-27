@@ -27,7 +27,7 @@ public class None extends DynamicVoltageAndFrequencyScalingMethod
     @Override
     public void definedSpeed(Processor p)
     {
-        speed = p.getTaskSet().getMaxProcessingSpeed();
+        speed = p.getTaskSet().getProcessingSpeed();
     }
 
     @Override
@@ -71,9 +71,15 @@ public class None extends DynamicVoltageAndFrequencyScalingMethod
     {
         
     }
+    
+    @Override
+    public void checkEndSystemTimeAction(long systemTime)
+    {
+        
+    }
 
     @Override
-    public void jobDeadlineAction(Job j)
+    public void jobMissDeadlineAction(Job j)
     {
         
     }

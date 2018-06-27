@@ -36,6 +36,8 @@ public class ScriptPanel extends JPanel
     private JTextField workloadTextField;
     private JTextField processorTextField;
     private JTextField simTimeField;
+    private JTextField accuracyField;
+    private JTextField threadAmountField;
     private JComboBox<String> partitionComboBox;
     private JComboBox<String> schedulingComboBox;
     private JComboBox<String> CCPComboBox;
@@ -252,10 +254,32 @@ public class ScriptPanel extends JPanel
         
         //-----
         
-        JToolBar scheduleToolBar = new JToolBar();
-        scheduleToolBar.setLayout(new GridLayout(1,3));
         
-        this.add(scheduleToolBar,BorderLayout.SOUTH);
+        //-----
+        JToolBar accuracyToolBar = new JToolBar();
+        accuracyToolBar.setFloatable(false);
+        JLabel accuracyLabel = new JLabel("Accuracy: ");
+        this.accuracyField = new JTextField();
+        accuracyToolBar.add(accuracyLabel);
+        accuracyToolBar.add(this.accuracyField);
+        d.gridy ++;
+        jt.add(accuracyToolBar,d);
+        
+        //-----
+        
+        
+        //-----
+        JToolBar threadAmountToolBar = new JToolBar();
+        threadAmountToolBar.setFloatable(false);
+        JLabel threadAmountLabel = new JLabel("ThreadAmount: ");
+        this.threadAmountField = new JTextField();
+        threadAmountToolBar.add(threadAmountLabel);
+        threadAmountToolBar.add(this.threadAmountField);
+        d.gridy ++;
+        jt.add(threadAmountToolBar,d);
+        
+        //-----
+        
     }
  
     public String getScriptID()
@@ -278,6 +302,18 @@ public class ScriptPanel extends JPanel
     {
         return this.simTimeField.getText();
     }
+    
+    public String getAccuracy()
+    {
+        return this.accuracyField.getText();
+    }
+    
+    public String getThreadAmount()
+    {
+        return this.threadAmountField.getText();
+    }
+    
+    
     
     public String getPartitionMethod()
     {
@@ -303,4 +339,6 @@ public class ScriptPanel extends JPanel
     {
         return this.workloadTextField;
     }
+    
+    
 }

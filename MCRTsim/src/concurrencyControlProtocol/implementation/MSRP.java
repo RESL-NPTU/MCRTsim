@@ -47,18 +47,24 @@ public class MSRP extends SRP
         {
             this.globalResourceFIFOJobQueue.add(new Vector<Job>());
         }
+        
+        for(SharedResource r :p.getSharedResourceSet())
+        {
+            r.setIsGlobal();
+        }
     }
     
-    public void jobArrivesAction(Job j)
+    @Override
+    public boolean checkJobFirstExecuteAction(Job j)
     {
         this.preemptionLevelSystem = this.preemptionCore.get(j.getCurrentCore().getID() -1).preemptionLevelSystem;
         this.levelJob = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob;
         this.levelRes = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes;
         this.lockResource = this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource;
-        super.jobArrivesAction(j);
+        return super.checkJobFirstExecuteAction(j);
     }
     
-    public SharedResource jobLockAction(Job j, SharedResource r)
+    public SharedResource checkJobLockAction(Job j, SharedResource r)
     {
         this.preemptionLevelSystem = this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem;
         this.levelJob = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob;
@@ -78,9 +84,6 @@ public class MSRP extends SRP
                 this.lockResource.add(r);
                 j.getCurrentCore().isPreemption=false;
                 
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem = this.preemptionLevelSystem;
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob = this.levelJob;
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes = this.levelRes;
                 this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource = this.lockResource;
                 
                 return null;
@@ -90,17 +93,12 @@ public class MSRP extends SRP
                 j.getCurrentCore().isPreemption = false;
                 j.getCurrentCore().setCoreStatus(Definition.CoreStatus.WAIT);
                 
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem = this.preemptionLevelSystem;
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob = this.levelJob;
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes = this.levelRes;
-                this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource = this.lockResource;
-            
                 return r;
             }
         }
         else
         {
-            SharedResource temp = super.jobLockAction(j, r);
+            SharedResource temp = super.checkJobLockAction(j, r);
             
             this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem = this.preemptionLevelSystem;
             this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob = this.levelJob;
@@ -117,7 +115,7 @@ public class MSRP extends SRP
         this.levelJob = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob;
         this.levelRes = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes;
         this.lockResource = this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource;
-        //System.out.println("MSRP Unlock= " + r.getID() + ":" + r.isGlobal() + ":" + this.waitGlobalResourceJob.get(r.getID() - 1).size());
+        //println("MSRP Unlock= " + r.getID() + ":" + r.isGlobal() + ":" + this.waitGlobalResourceJob.get(r.getID() - 1).size());
         if(r.isGlobal())
         {
             j.unLockSharedResource(r);
@@ -131,6 +129,7 @@ public class MSRP extends SRP
                     if(j.getEnteredCriticalSectionSet().get(i).getUseSharedResource().isGlobal())
                     {
                         lockGlobal = true;
+                        break;
                     }
                 }
             }
@@ -139,7 +138,8 @@ public class MSRP extends SRP
             {
                 j.getCurrentCore().isPreemption=true;
             }
-
+            
+            
             this.globalResourceFIFOJobQueue.get(r.getID() - 1).remove(j);
         }
         else
@@ -150,79 +150,31 @@ public class MSRP extends SRP
             this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes = this.levelRes;
             this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource = this.lockResource;
         }
-        
-        this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem = this.preemptionLevelSystem;
-        this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob = this.levelJob;
-        this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes = this.levelRes;
-        this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource = this.lockResource;
-        
     }
     
     public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
-    {
+    {   
         if(!blockingRes.isGlobal())
         {
             super.jobBlockedAction(blockedJob, blockingRes);
         }
     }
     
-    public void jobDeadlineAction(Job j)
+    @Override
+    public void jobMissDeadlineAction(Job j)
     {
-        //System.out.println("MSRP Deadline= J(" + j.getParentTask().getID() + ")= " + j.getLocalCore().getID() + ":" + j.getEnteredCriticalSectionSet().size());
-        this.preemptionLevelSystem = this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem;
-        this.levelJob = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob;
-        this.levelRes = this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes;
-        this.lockResource = this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource;
-                
-        if(j.getEnteredCriticalSectionSet().size() > 0)
+        SharedResource blockingResource = j.getBlockingResource();
+        
+        if(blockingResource != null)
         {
-            while(j.getEnteredCriticalSectionSet().size() > 0)
+            if(blockingResource.isGlobal())
             {
-                SharedResource r = j.getEnteredCriticalSectionSet().peek().getUseSharedResource();
-                if(r.isGlobal())
-                {
-                    j.unLockSharedResource(r);
-                    this.lockResource.remove(r);
-                    j.getCurrentCore().isPreemption=true;
-                    this.globalResourceFIFOJobQueue.get(r.getID() - 1).remove(j);
-                }
-                else
-                {
-                    if(r.getWaitQueue().size() > 0)
-                    {
-                        j.endInheritance();
-                    }
-                    j.unLockSharedResource(r);
-                    //j.setCurrentProiority(j.getOriginalPriority());
-                    for(int i = 0; i < this.lockResource.size(); i++)
-                    {
-                        if(this.lockResource.get(i).getID() == r.getID())
-                        {
-                            this.lockResource.remove(i);
-                        }
-                    }
-                    this.lockResource.remove(r);
-                }
+                this.globalResourceFIFOJobQueue.get(blockingResource.getID() - 1).remove(j);
             }
-            
-            this.preemptionLevelSystem = Definition.Ohm;
-            this.levelJob = null;
-            this.levelRes = null;
-            
-            for(int i = 0; i < this.lockResource.size(); i++)
+            else
             {
-                if(this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1).isHigher(this.preemptionLevelSystem))
-                {
-                    this.preemptionLevelSystem = this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1);
-                    this.levelRes = this.lockResource.get(i);
-                    this.levelJob = this.lockResource.get(i).getWhoLockedLastResource(j); 
-                }
+                super.jobMissDeadlineAction(j);
             }
-            
-            this.preemptionCore.get(j.getCurrentCore().getID() - 1).preemptionLevelSystem = this.preemptionLevelSystem;
-            this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelJob = this.levelJob;
-            this.preemptionCore.get(j.getCurrentCore().getID() - 1).levelRes = this.levelRes;
-            this.preemptionCore.get(j.getCurrentCore().getID() - 1).lockResource = this.lockResource;
         }
     }
 }

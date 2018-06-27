@@ -72,9 +72,15 @@ public class MaxSpeed extends DynamicVoltageAndFrequencyScalingMethod
     {
         
     }
+    
+    @Override
+    public void checkEndSystemTimeAction(long systemTime)
+    {
+        
+    }
 
     @Override
-    public void jobDeadlineAction(Job j)
+    public void jobMissDeadlineAction(Job j)
     {
         
     }

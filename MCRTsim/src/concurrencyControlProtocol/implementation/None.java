@@ -38,12 +38,12 @@ public class None extends ConcurrencyControlProtocol
     }
     
     @Override
-    public void jobExecuteAction(Job j)
+    public void jobFirstExecuteAction(Job j)
     {
     }
 
     @Override
-    public SharedResource jobLockAction(Job j, SharedResource r)
+    public SharedResource checkJobLockAction(Job j, SharedResource r)
     {
         return null;
     }
@@ -59,12 +59,18 @@ public class None extends ConcurrencyControlProtocol
     }
 
     @Override
-    public void jobDeadlineAction(Job j)
+    public void jobMissDeadlineAction(Job j)
     {
     }
 
     @Override
     public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
     {
+    }
+
+    @Override
+    public boolean checkJobFirstExecuteAction(Job j) 
+    {
+        return true;
     }
 }

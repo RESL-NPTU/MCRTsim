@@ -8,6 +8,7 @@ package SystemEnvironment;
 import WorkLoad.Job;
 import WorkLoadSet.JobQueue;
 import WorkLoadSet.TaskSet;
+import mcrtsim.Definition;
 import schedulingAlgorithm.PriorityDrivenSchedulingAlgorithm;
 
 /**
@@ -42,10 +43,16 @@ public class Scheduler
         {
             tempJob.setOriginalPriority(tempJob.getCurrentProiority());//因為是動態的排程方法，因此新的Proiority也需要更改到OriginalPriority
             
-            if(tempJob.isInherit())
+            if(tempJob.isInherit)
             {
                 tempJob.setCurrentProiority(tempJob.getInheritPriority());
             }
+            
+            if(tempJob.isSuspended)
+            {
+                tempJob.setCurrentProiority(Definition.Ohm);
+            }
+            
             inheritJQ.add(tempJob);
         }
         return inheritJQ;

@@ -5,13 +5,10 @@
  */
 package SystemEnvironment;
 
-import WorkLoad.CoreSpeed;
+
 import WorkLoad.Job;
 import WorkLoad.SharedResource;
-import WorkLoadSet.CoreSet;
-import WorkLoadSet.CoreSpeedSet;
 import dynamicVoltageAndFrequencyScalingMethod.DynamicVoltageAndFrequencyScalingMethod;
-import java.util.Vector;
 import mcrtsim.Definition.DVFSType;
 
 /**
@@ -38,34 +35,34 @@ public class DynamicVoltageRegulator
     {
         this.method.definedSpeed(this.parentProcessor);
         
-        //System.out.println("Regulator:DefinedSpeed");
+        //println("Regulator:DefinedSpeed");
     }
     
     public void checkJobArrivesProcessor(Job j, Processor p)
     {
-        //System.out.println("Regulator:JobArrivesProcessor");
+        //println("Regulator:JobArrivesProcessor");
         this.method.jobArrivesProcessorAction(j, p);
     }
     
     public void checkJobArrivesCore(Job j, Core c)
     {
-        //System.out.println("Regulator:JobArrivesCore");
+        //println("Regulator:JobArrivesCore");
         this.method.jobArrivesCoreAction(j, c);
     }
     
     public void checkCoresExecute()
     {
-        //System.out.println("Regulator:CoresExecute");
+        //println("Regulator:CoresExecute");
         this.method.coresExecuteAction();
     }
     
     public void checkCoreExecute(Core c)
     {
-        //System.out.println("Regulator:CoreExecute");
+        //println("Regulator:CoreExecute");
         this.method.coreExecuteAction(c);
     }
     
-    public void checkJobFirstExecute(Job j)
+    public void JobFirstExecuteAction(Job j)
     {
         this.method.jobFirstExecuteAction(j);
     }
@@ -77,31 +74,36 @@ public class DynamicVoltageRegulator
     
     public void checkJobLock(Job j, SharedResource r)
     {
-        //System.out.println("Regulator:JobLock");
+        //println("Regulator:JobLock");
         this.method.jobLockAction(j, r);
     }
     
     public void checkJobUnlock(Job j, SharedResource r)
     {
-        //System.out.println("Regulator:JobUnlock");
+        //println("Regulator:JobUnlock");
         this.method.jobUnlockAction(j, r);
     }
     
     public void checkJobComplete(Job j)
     {
-        //System.out.println("Regulator:JobComplete");
+        //println("Regulator:JobComplete");
         this.method.jobCompleteAction(j);
     }
     
-    public void checkJobDeadline(Job j)
+    public void checkEndSystemTimeAction(long systemTime)
     {
-        //System.out.println("Regulator:JobDeadline");
-        this.method.jobDeadlineAction(j);
+        this.method.checkEndSystemTimeAction(systemTime);
+    }
+    
+    public void checkJobMissDeadline(Job j)
+    {
+        //println("Regulator:JobDeadline");
+        this.method.jobMissDeadlineAction(j);
     }
     
     public void checkBlockAction(Job blockedJob, SharedResource blockingRes)
     {
-        //System.out.println("Regulator:Block");
+        //println("Regulator:Block");
         this.method.jobBlockedAction(blockedJob, blockingRes);
     }
     
@@ -140,29 +142,7 @@ public class DynamicVoltageRegulator
             }
         }
     }
-    
-//    public void setCoreType(String s)
-//    {
-//        if(s.equals("Ideal"))
-//        {
-//            this.isIdeal = true;
-//        }
-//    }
-//    
-//    public void setAlphaValue(double a)
-//    {
-//        this.alpha = a;
-//    }
-//    
-//    public void setBetaValue(double b)
-//    {
-//        this.beta = b;
-//    }
-//    
-//    public void setGammaValue(double r)
-//    {
-//        this.gamma = r;
-//    }
+
     
     /*GetValue*/
     public DynamicVoltageAndFrequencyScalingMethod getDynamicVoltageAndFrequencyScalingMethod()

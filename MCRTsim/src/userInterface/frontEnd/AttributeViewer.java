@@ -90,7 +90,7 @@ public class AttributeViewer extends JPanel
         
         try
         {
-            this.Speed="" + schedulingInfo.getUseSpeed() + "_(" + schedulingInfo.getNormalizationOfSpeed() + ")";
+            this.Speed="" + schedulingInfo.getUseSpeed() + "_(" + math.changeDecimalFormatFor5(schedulingInfo.getNormalizationOfSpeed()) + ")";
         }
         catch (Exception ex)
         {
@@ -99,8 +99,8 @@ public class AttributeViewer extends JPanel
         
         try
         {
-            this.PowerConsumption = ""+math.changeDecimalFormat(schedulingInfo.getTotalPowerConsumption()) +" (mW)";//+ rd.getTotalPowerConsumption() + " (mW)";
-            this.AveragePowerConsumption = ""+math.changeDecimalFormat(schedulingInfo.getAveragePowerConsumption())+ " (mW/s)";
+            this.PowerConsumption = ""+math.changeDecimalFormatFor5(schedulingInfo.getTotalPowerConsumption()) +" (mW)";//+ rd.getTotalPowerConsumption() + " (mW)";
+            this.AveragePowerConsumption = ""+math.changeDecimalFormatFor5(schedulingInfo.getAveragePowerConsumption())+ " (mW/s)";
             this.CoreStatus="" + schedulingInfo.getCoreStatus();
         }
         catch (Exception ex)

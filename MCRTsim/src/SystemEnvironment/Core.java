@@ -6,17 +6,22 @@
 package SystemEnvironment;
 
 import ResultSet.SchedulingInfo;
+import WorkLoad.Cost;
 import WorkLoad.Job;
 import WorkLoad.Task;
 import WorkLoadSet.CoreSet;
 import WorkLoadSet.JobQueue;
 import WorkLoadSet.TaskSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Vector;
 import mcrtsim.Definition.CoreStatus;
 import mcrtsim.Definition.JobStatus;
 import mcrtsim.Definition.PriorityType;
 import mcrtsim.Definition.SchedulingType;
 import static mcrtsim.Definition.magnificationFactor;
+import static mcrtsim.MCRTsim.*;
+import mcrtsim.MCRTsimMath;
 import schedulingAlgorithm.PriorityDrivenSchedulingAlgorithm;
 
 /**
@@ -31,6 +36,7 @@ public class Core
     private Scheduler localScheduler;
     private TaskSet taskSet;
     private JobQueue localReadyQueue;
+    private Queue<Cost> costQueue;
     private CoreStatus status;
     private Job workingJob;
     private double currentSpeed;
@@ -38,12 +44,10 @@ public class Core
     private long currentTime;
     private Vector<SchedulingInfo> schedulingInfoSet;
     public boolean isPreemption;
-    public boolean isChangeLock;
-    public boolean isChangeSpeed;
+    public boolean isChangeLock;//
+    public boolean isChangeSpeed;//
     private long powerConsumption;
-    private long contactSwitchCost = 0;
     private int contactSwitchCount = 0;
-    private long migrationCost = 0;
     private int migrationCount = 0;
     
     public Core()
@@ -55,6 +59,7 @@ public class Core
         this.localScheduler.setParentCore(this);
         this.taskSet = new TaskSet();
         this.localReadyQueue = new JobQueue();
+        this.costQueue = new LinkedList<Cost>();
         this.status = CoreStatus.IDLE;
         this.workingJob = null;
         this.isPreemption = true;
@@ -77,14 +82,11 @@ public class Core
     
     public void schedulerCalculatePriorityForFixed()
     {
-        
         this.localScheduler.calculatePriority(this.taskSet);
-        System.out.println("4");
         
         for(Task t : this.taskSet)
         {
-            System.out.println("5");
-            System.out.println("~Core ID:"+this.ID+", Task ID:"+t.getID()+", Priority:"+t.getPriority().getValue());
+            println("~Core ID:"+this.ID+", Task ID:"+t.getID()+", Priority:"+t.getPriority().getValue());
         }
     }
     
@@ -96,35 +98,19 @@ public class Core
         }
     }
     
-    public boolean JobToCore(Job j)//Job成功進入core回傳true; 失敗則回傳false; 
+    public void JobToCore(Job j)
     {
         //DVSAction
         this.parentProcessor.getDynamicVoltageRegulator().checkJobArrivesCore(j, this);
         if(this.getParentProcessor().getSchedulingAlgorithm().getSchedulingType() == SchedulingType.Global)
         {
+            if(!this.localReadyQueue.isEmpty())
+            {
+                this.parentProcessor.getGlobalReadyQueue().add(this.localReadyQueue.poll());
+            }
+            j.setCurrentCore(this);
             this.localReadyQueue.add(j);
-            Job firstJob = this.localReadyQueue.poll();
-            Job tempJob;
-            while((tempJob = this.localReadyQueue.poll()) != null)
-            {
-                tempJob.setCurrentCore(null);
-                tempJob.setPreviousCore(this);
-                this.parentProcessor.getGlobalReadyQueue().add(tempJob);
-            }
-
-            if(firstJob.getOriginCore() == null)
-            {
-                firstJob.setOriginCore(this);
-            }
-            firstJob.setCurrentCore(this);
-            this.localReadyQueue.add(firstJob);
             
-            System.out.println("~~~~~Job: "+ j.getCurrentProiority().getValue() + " -- firstJob: " +firstJob.getCurrentProiority().getValue() + " -- Core: "+ this.ID);
-            
-            if(j != firstJob)
-            {
-                return false;
-            }
         }
         else// 如果是單核心或partition才進入以下程式
         {
@@ -135,19 +121,18 @@ public class Core
             j.setCurrentCore(this);
             
             this.localReadyQueue.add(j);
-            //防止SRP到達繼承問題
+            //防止SRP在jobArrivesAction發生繼承問題(工作一進來就要給定優先權並排序)
             this.schedulerCalculatePriorityForDynamic();
         }
-        return true;
     }
     
     public void chooseExecuteJob()
     {
-        if(this.status != CoreStatus.STOP && this.status != CoreStatus.CONTEXTSWITCH)//把進入CONTEXTSWITCH的狀態加入this.isPreemption = false;
+        if(this.status != CoreStatus.STOP )//&& this.status != CoreStatus.CONTEXTSWITCH)
         {
-            if(this.localScheduler != null)
+            
+            if(this.getParentProcessor().getSchedulingAlgorithm().getSchedulingType() != SchedulingType.Global)
             {
-                //if(this.localScheduler.getSchedAlgorithm() instanceof DynamicPrioritySchedulingAlgorithm)
                 if(this.localScheduler.getSchedAlgorithm() != null)
                 {
                     if(this.localScheduler.getSchedAlgorithm().getPriorityType() == PriorityType.Dynamic)
@@ -156,58 +141,154 @@ public class Core
                     }
                 }
             }
-        
-            if(this.isPreemption)
-            {
-                this.getParentProcessor().getController().jobPreemptedAction(this);
-                this.workingJob = this.localReadyQueue.peek();
+            
+            
+            if(this.isPreemption && this.costQueue.isEmpty())//若為'可搶先'而且沒有Cost需要執行，則開始進行workingJob的切換成新進Job的判斷
+            {             
+//                if(this.getParentProcessor().getSchedulingAlgorithm().getSchedulingType() == SchedulingType.Global
+//                   && !this.parentProcessor.getGlobalReadyQueue().isEmpty() && this.localReadyQueue.isEmpty())//
+//                {
+//                    this.JobToCore(this.getParentProcessor().getGlobalReadyQueue().poll());
+//                }
+                
+                if(this.workingJob != this.localReadyQueue.peek())//若this.workingJob != this.localReadyQueue.peek()，則this.localReadyQueue.peek()為新進的Job(較高的優先權 or  NULL)
+                {
+                    if(this.localReadyQueue.peek() != null)//這時候新進的Job不應該是'COMPLETED'或是'MISSDEADLINE'的狀態
+                    {    
+                        if(this.localReadyQueue.peek().getStatus() == JobStatus.COMPUTING)//判斷新進來的Job是否需要恢復，若需要恢復則要加入Context switch cost;
+                        {
+                            this.setContextSwitchCost(this, this.localReadyQueue.peek());//setContextSwitchCost函式已考慮 Context switch cost 為0的情況
+                        }
+                        //以下新進的Job不需要'恢復'，只需考慮是否搶先。
+                        else if(this.workingJob != null)//這裡的workingJob為被搶先的Job
+                        {
+                            if(this.workingJob.getStatus() == JobStatus.NONCOMPUTE//若workingJob是'NONCOMPUTE'的狀態，則新進的Job無搶先workingJob，因此不需要Context switch cost
+                               || this.workingJob.getStatus() == JobStatus.COMPLETED //若workingJob是已經'COMPLETED'的狀態，則新進的Job無搶先workingJob，因此不需要Context switch cost
+                               || this.workingJob.getStatus() == JobStatus.MISSDEADLINE)//若workingJob是已經'MISSDEADLINE'的狀態，則新進的Job無搶先workingJob，因此不需要Context switch cost
+                            {
+                                this.setWorkingJob(this.localReadyQueue.peek());
+                            }
+                            else if(this.workingJob.getStatus() == JobStatus.COMPUTING)//若workingJob是'COMPUTING'的狀態，則新進的Job搶先workingJob，因此需要Context switch cost
+                            {
+                                this.setContextSwitchCost(this, this.localReadyQueue.peek());//setContextSwitchCost函式已考慮 Context switch cost 為0的情況
+                            }
+                            
+                            //需要加入migration cost之後“恢復”的判斷
+                        }
+                        else if(this.workingJob == null) //若this.workingJob == null就表示當前的Core是IDLE狀態，因此不需要Context switch cost
+                        {
+                            this.setWorkingJob(this.localReadyQueue.peek());
+                        }
+                    }
+                    else if(this.localReadyQueue.peek() == null)//新進的Job若為null就表示目前無任何工作，CoreStatus將進入IDLE狀態
+                    {
+                        this.setWorkingJob(this.localReadyQueue.peek());
+                    }
+                }
+                else if(this.workingJob == this.localReadyQueue.peek())
+                {       //若當前的workingJob == this.localReadyQueue.peek()，則需要判斷是否需要加入ContextSwitchCost
+                        //但不需要重新setWorkingJob因此不會有同一個Job搶先自己的問題
+                    
+                    if(!this.schedulingInfoSet.isEmpty() && this.schedulingInfoSet.lastElement().getJob() != this.localReadyQueue.peek()
+                       && this.localReadyQueue.peek().getStatus() == JobStatus.COMPUTING)//this.localReadyQueue.peek()是'需要恢復'的Job才加入ContextSwitchCost
+                    {
+                        this.setContextSwitchCost(this, workingJob);
+                    }
+                }
             }
         }
     }
     
     public void readyRun()
     {
-        boolean isReady = false;         //若是已經是CONTEXTSWITCH or MIGRATION狀態 則不執行此段程式
-        while( (!isReady) && this.status != CoreStatus.CONTEXTSWITCH && this.status != CoreStatus.MIGRATION)
+        boolean isReady = false;
+        
+        while( (!isReady) && this.costQueue.isEmpty())//若正在執行Cost 則不執行此段程式
         {
             if(this.status != CoreStatus.STOP)
             {
                 if(this.workingJob != null)
                 {
                     //ControllerAction
-                    if(this.getParentProcessor().getController().checkJobLock(this.workingJob))
+                    if(this.parentProcessor.getController().checkFirstExecuteAction(this.workingJob))
                     {
-                        this.status = CoreStatus.EXECUTION;
-                        
-                        if(this.workingJob.getProgressAmount() == 0)
+                        if(this.parentProcessor.getController().checkJobLock(this.workingJob))//IF不可合併
                         {
-                            this.parentProcessor.getController().checkJobExecute(workingJob);
-                            this.parentProcessor.getDynamicVoltageRegulator().checkJobFirstExecute(workingJob);
-                        }
-                        
-                        this.parentProcessor.getDynamicVoltageRegulator().checkJobEveryExecute(workingJob);
-                        
-                        isReady = true;
-                    }
-                    else
-                    {
-                        if(this.status == CoreStatus.WAIT && this.workingJob == this.localReadyQueue.peek())
-                        {
+                            this.status = CoreStatus.EXECUTION;
+                            
+                            if(this.workingJob.getProgressAmount() == 0)
+                            {
+                                this.parentProcessor.getController().JobFirstExecuteAction(workingJob);                        
+                                this.parentProcessor.getDynamicVoltageRegulator().JobFirstExecuteAction(workingJob);
+                            }
+
+                            this.parentProcessor.getDynamicVoltageRegulator().checkJobEveryExecute(workingJob);
+
                             isReady = true;
+                        }
+                    }
+                    
+                    if(!isReady)//isReady == false
+                    {
+                        if(this.isPreemption)
+                        {
+                            if(this.parentProcessor.getSchedulingAlgorithm().getSchedulingType() == SchedulingType.Global)
+                            {
+                                if(this.status == CoreStatus.WAIT)
+                                {
+                                    if(this.parentProcessor.getGlobalReadyQueue().peek() != null &&
+                                       this.parentProcessor.getGlobalReadyQueue().peek().getCurrentProiority().isHigher(this.localReadyQueue.peek().getCurrentProiority()))
+                                    {
+                                        this.JobToCore(this.parentProcessor.getGlobalReadyQueue().poll());
+                                        isReady = false;
+                                    }
+                                    else
+                                    {
+                                        isReady = true;
+                                    }
+                                }
+                                else 
+                                {
+                                    //Global架構中，只要有Job被阻擋，而且不是waitting阻擋，就必須要把工作丟回去Global queue中在重新取得新工作。
+                                    //若在此形成無窮迴圈，則代表被阻擋的工作被阻擋的當下沒有使用PIP or Suspension 機制
+                                    if(!this.localReadyQueue.isEmpty())
+                                    {
+                                        this.parentProcessor.getGlobalReadyQueue().add(this.localReadyQueue.poll());
+                                    }
+                                    
+                                    
+                                    if(this.parentProcessor.getGlobalReadyQueue().peek() != null)
+                                    {
+                                        this.JobToCore(this.parentProcessor.getGlobalReadyQueue().poll());
+                                    }
+                                    
+                                    isReady = false;
+                                }
+                            }
+                            else // if not Global
+                            {
+                                if(this.status == CoreStatus.WAIT && this.workingJob == this.localReadyQueue.peek())
+                                {
+                                    isReady = true;
+                                }
+                                else
+                                {
+                                    isReady = false;
+                                }
+                            }
                         }
                         else
                         {
-//                            if(this.getParentProcessor().getSchedulingAlgorithm().getSchedulingType() == SchedulingType.Global)
-//                            {
-//                                if(this.parentProcessor.getGlobalReadyQueue().size() > 0)
-//                                {
-//                                    this.JobToCore(this.parentProcessor.getGlobalReadyQueue().poll());
-//                                }
-//                            }
-                            
+                            isReady = true;
+                        }
+
+                        if(!isReady)
+                        {
                             this.chooseExecuteJob();
                             isReady = false;
+                            println("NO!!!!!NO!!!!!");
                         }
+                        
                     }
                 }
                 else
@@ -220,26 +301,18 @@ public class Core
             {
                 isReady = true;
             }
-            
-            if(isReady)//進入context switch的條件式
-            {
-                if(!this.schedulingInfoSet.isEmpty())//isEmpty()是否為空值;空值為ture,反之為false
-                {
-                    Job previousJob = this.schedulingInfoSet.lastElement().getJob();
-                    if(this.workingJob != null && previousJob != null && previousJob.getStatus() == JobStatus.COMPUTING && this.workingJob != previousJob)//判斷是否搶先
-                    {
-                        this.addContextSwitchCost(this.parentProcessor.getParentSimulator().getContextSwitchTime());//加入使用者輸入
-                    }
-                    else if(this.workingJob != null && this.workingJob != previousJob && this.workingJob.getStatus() == JobStatus.COMPUTING)//判斷計算中且未完成的JOB是否回復
-                    {
-                        this.addContextSwitchCost(this.parentProcessor.getParentSimulator().getContextSwitchTime());//加入使用者輸入
-                    }
-                }
-            }
         }
         
         this.parentProcessor.getDynamicVoltageRegulator().checkCoreExecute(this);
     }
+    
+    public void checkCost()
+    {   
+        if(!this.costQueue.isEmpty())
+        {
+            this.status = this.costQueue.peek().getStatus();
+        }
+    } 
     
     public void run(long processedTime)
     {
@@ -247,7 +320,6 @@ public class Core
 
         while(this.currentTime < t)
         {
-            //System.out.println("Those" + this.currentTime);
             if(this.status == CoreStatus.EXECUTION)
             {
                 this.record();
@@ -270,24 +342,31 @@ public class Core
                 this.record();
                 this.currentTime += processedTime;
                 this.powerConsumption += this.getParentCoreSet().getPowerConsumption() * processedTime;
-                this.contactSwitchCost -= processedTime;
+                if(this.costQueue.peek().getStatus() == CoreStatus.CONTEXTSWITCH)
+                {
+                    this.costQueue.peek().execution(processedTime);
+                }
             }
             else if(this.status == CoreStatus.MIGRATION)
             {
                 this.record();
                 this.currentTime += processedTime;
                 this.powerConsumption += this.getParentCoreSet().getPowerConsumption() * processedTime;
-                this.contactSwitchCost -= processedTime;
+                
+                if(this.costQueue.peek().getStatus() == CoreStatus.MIGRATION)
+                {
+                    this.costQueue.peek().execution(processedTime);
+                }
             }
         }
-        //System.out.println("  " + this.currentTime/magnificationFactor + "PowerConsumption=" + this.powerConsumption/magnificationFactor + "mHz");
+        
     }
     
     private void runJob(long processedTime)
     {
-        if((Double.valueOf((this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount()) * this.workingJob.getMaxProcessingSpeed()) / this.parentCoreSet.getCurrentSpeed()) >= processedTime)
-        {    
-            this.workingJob.execute(processedTime * this.getParentCoreSet().getCurrentSpeed() / this.workingJob.getMaxProcessingSpeed(),this.currentTime);
+        if(((this.workingJob.getTargetAmount() - this.workingJob.getProgressAmount()) * this.workingJob.getMaxProcessingSpeed() ) >= processedTime * this.parentCoreSet.getCurrentSpeed())
+        {   
+            this.workingJob.execute(MCRTsimMath.mul(processedTime , MCRTsimMath.div(this.getParentCoreSet().getCurrentSpeed() , this.workingJob.getMaxProcessingSpeed())),this.currentTime);
             
             this.powerConsumption += this.getParentCoreSet().getPowerConsumption() * processedTime;
             //CortrollerAction
@@ -306,36 +385,62 @@ public class Core
         this.workingJob.setStatus(JobStatus.COMPUTING, this.currentTime);
     }
     
-    public void afterRun()
+    public void checkJobisCompleted()//檢查Job是否完成工作(201707)
     {
         if(this.workingJob != null)
         {
-            this.checkJobisCompleted();
-        }
-        
-        if(this.status == CoreStatus.CONTEXTSWITCH && this.contactSwitchCost == 0)
-        {
-            this.status = CoreStatus.IDLE;
-        }
-        
-        if(this.status == CoreStatus.MIGRATION && this.migrationCost == 0)
-        {
-            this.status = CoreStatus.IDLE;
+            if(this.workingJob.getProgressAmount() >= this.workingJob.getTargetAmount() //Job的工作量以完成
+            && this.workingJob.getStatus() != JobStatus.COMPLETED && this.workingJob.getStatus() != JobStatus.MISSDEADLINE)//因為this.workingJob並不會因為'COMPLETED'or'MISSDEADLINE'而改變Job物件
+            {                                                                                                              //為此需要加入此判斷必免重複執行此函式
+                println("@~0workingJob ="+this.workingJob.getStatus());
+                this.workingJob.setStatus(JobStatus.COMPLETED, this.currentTime);//將Job的狀態改為Completed
+                println("@~1workingJob ="+this.workingJob.getStatus());
+                //CortrollerAction
+                this.parentProcessor.getController().jobCompletedAction(workingJob);
+                //DVSAction
+                this.parentProcessor.getDynamicVoltageRegulator().checkJobComplete(workingJob);
+                println("0 "+ this.localReadyQueue.contains(this.workingJob));
+                this.localReadyQueue.remove(this.workingJob);
+                println("1 "+ this.localReadyQueue.contains(this.workingJob));
+                if(this.workingJob.getCurrentCore().getLocalReadyQueue().contains(this.workingJob))//確保在migration期間也能確實remove已完成的Job
+                {   
+                    this.workingJob.getCurrentCore().getLocalReadyQueue().remove(this.workingJob);
+                }
+            }
         }
     }
     
-    public void checkJobisCompleted()//檢查Job是否完成工作(201707)
+    public void lastCheckCost()//在本次執行的最後檢查是否有Job已經完成or超出截止時間，有的話把該Job造成的Cost中斷
     {
-        if(this.workingJob.getProgressAmount() >= this.workingJob.getTargetAmount())
+        if(!this.costQueue.isEmpty())
         {
-            //CortrollerAction
-            this.parentProcessor.getController().jobCompletedAction(workingJob);
-            //DVSAction
-            this.parentProcessor.getDynamicVoltageRegulator().checkJobComplete(workingJob);
-            this.localReadyQueue.remove(this.workingJob);
-            this.workingJob.setStatus(JobStatus.COMPLETED, this.currentTime);//將Job的狀態改為Completed
+            int count = this.costQueue.size();
+            for(int i = 0 ; i< count;i++)
+            {
+                Cost cost = this.costQueue.poll();
+                
+                if(cost.getRequestJob().getStatus() != JobStatus.COMPLETED  
+                  && cost.getRequestJob().getStatus() != JobStatus.MISSDEADLINE)//在cost內的RequestJob不應該是'NONCOMPUTE'狀態
+                {
+                    if(!cost.checkIsCompleted())//若Cost.checkIsCompleted回傳true則，在Cost.checkIsCompleted的函式中就會配置Job;
+                    {
+                        this.costQueue.add(cost);
+                    }
+                }
+            }
+            
+            if(this.costQueue.isEmpty())
+            {
+                this.status = CoreStatus.IDLE;
+            }
+            else
+            {
+                this.status = this.costQueue.peek().getStatus();
+            }
         }
     }
+    
+//    
     
     public void finalRecording()
     {
@@ -348,23 +453,23 @@ public class Core
         {
             if(this.isChangeSpeed)
             {
-                System.out.println("this.isChangeSpeed = true");
+                println("this.isChangeSpeed = true");
             }
             
             if(this.status == CoreStatus.EXECUTION)
             {
                 if(this.isChangeLock)
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + ": E : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
 
                     if(!this.workingJob.getEnteredCriticalSectionSet().empty())
                     {
-                        System.out.print("    Use Resource:");
+                        print("    Use Resource:");
                         for(int i = 0; i < this.workingJob.getEnteredCriticalSectionSet().size(); i++)
                         {
-                            System.out.print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
+                            print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
                         }
-                        System.out.println();
+                        println();
                     }
 
                     if(this.previousSchedulingInfo != null)
@@ -381,32 +486,32 @@ public class Core
                 {
                     if(this.previousSchedulingInfo == null)//this.previousResult==null 代表第一次紀錄點
                     {
-                        System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
+                        println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + ": E : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
 
                         if(!this.workingJob.getEnteredCriticalSectionSet().empty())
                         {
-                            System.out.print("    Use Resource:");
+                            print("    Use Resource:");
                             for(int i = 0; i < this.workingJob.getEnteredCriticalSectionSet().size(); i++)
                             {
-                                System.out.print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
+                                print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
                             }
-                            System.out.println();
+                            println();
                         }
 
                         this.newRecording();
                     }
                     else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.EXECUTION || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.EXECUTION && this.previousSchedulingInfo.getJob() != this.workingJob)) || this.isChangeSpeed))
                     {
-                        System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
+                        println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + ": E : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") : " + this.getParentCoreSet().getCurrentSpeed());
 
                         if(!this.workingJob.getEnteredCriticalSectionSet().empty())
                         {
-                            System.out.print("    Use Resource:");
+                            print("    Use Resource:");
                             for(int i = 0; i < this.workingJob.getEnteredCriticalSectionSet().size(); i++)
                             {
-                                System.out.print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
+                                print(this.workingJob.getEnteredCriticalSectionSet().get(i).getUseSharedResource().getID() + ". ");
                             }
-                            System.out.println();
+                            println();
                         }   
                         
                         this.previousSchedulingInfo.setEndTime(currentTime);
@@ -420,13 +525,13 @@ public class Core
             {
                 if(this.previousSchedulingInfo == null)//this.previousResult==null 代表第一次紀錄點
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : I : " + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : I : " + this.getParentCoreSet().getCurrentSpeed());
                     
                     this.newRecording();
                 }
                 else if(this.previousSchedulingInfo != null && (this.previousSchedulingInfo.getCoreStatus() != CoreStatus.IDLE || this.isChangeSpeed))
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : E : " + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : I : " + this.getParentCoreSet().getCurrentSpeed());
 
                     this.previousSchedulingInfo.setEndTime(currentTime);
                     this.previousSchedulingInfo.setTotalPowerConsumption(powerConsumption);
@@ -438,13 +543,13 @@ public class Core
             {
                 if(this.previousSchedulingInfo == null)//this.previousResult==null 代表第一次紀錄點
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : W : " + this.getParentCoreSet().getCurrentSpeed() );
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : W : " + this.getParentCoreSet().getCurrentSpeed() );
                     
                     this.newRecording();
                 }
                 else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.WAIT || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.WAIT && this.previousSchedulingInfo.getJob() != this.workingJob))|| this.isChangeSpeed))
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : W : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : W : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
                     
                     this.previousSchedulingInfo.setEndTime(currentTime);
                     this.previousSchedulingInfo.setTotalPowerConsumption(powerConsumption);
@@ -455,13 +560,13 @@ public class Core
             {
                 if(this.previousSchedulingInfo == null)//this.previousResult== null 代表整個Core的第一次紀錄點
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : C : " + this.getParentCoreSet().getCurrentSpeed() );
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : C : " + this.getParentCoreSet().getCurrentSpeed() );
                     
                     this.newRecording();
                 }
-                else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.CONTEXTSWITCH || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.CONTEXTSWITCH && this.previousSchedulingInfo.getJob() != this.workingJob))|| this.isChangeSpeed))
+                else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.CONTEXTSWITCH || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.CONTEXTSWITCH && this.previousSchedulingInfo.getJob() != this.costQueue.peek().getRequestJob())) || this.isChangeSpeed))
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : C : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : C : Job(" + this.costQueue.peek().getRequestJob().getParentTask().getID() + "," + this.costQueue.peek().getRequestJob().getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
                     
                     this.previousSchedulingInfo.setEndTime(currentTime);
                     this.previousSchedulingInfo.setTotalPowerConsumption(powerConsumption);
@@ -472,13 +577,13 @@ public class Core
             {
                 if(this.previousSchedulingInfo == null)//this.previousResult== null 代表整個Core的第一次紀錄點
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : M : " + this.getParentCoreSet().getCurrentSpeed() );
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : M : " + this.getParentCoreSet().getCurrentSpeed() );
                     
                     this.newRecording();
                 }
-                else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.MIGRATION || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.MIGRATION && this.previousSchedulingInfo.getJob() != this.workingJob))|| this.isChangeSpeed))
+                else if(this.previousSchedulingInfo != null && ((this.previousSchedulingInfo.getCoreStatus() != CoreStatus.MIGRATION || (this.previousSchedulingInfo.getCoreStatus() == CoreStatus.MIGRATION && this.previousSchedulingInfo.getJob() != this.costQueue.peek().getRequestJob()))|| this.isChangeSpeed))
                 {
-                    System.out.println("Core(" + this.ID + ") : " + this.currentTime/magnificationFactor + " : M : Job(" + this.workingJob.getParentTask().getID() + "," + this.workingJob.getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
+                    println("Core(" + this.ID + ") : " + (double)this.currentTime/magnificationFactor + " : M : Job(" + this.costQueue.peek().getRequestJob().getParentTask().getID() + "," + this.costQueue.peek().getRequestJob().getID() + ") :" + this.getParentCoreSet().getCurrentSpeed());
                     
                     this.previousSchedulingInfo.setEndTime(currentTime);
                     this.previousSchedulingInfo.setTotalPowerConsumption(powerConsumption);
@@ -493,21 +598,40 @@ public class Core
         SchedulingInfo newInfo = new SchedulingInfo();
         newInfo.setCore(this);
         newInfo.setCoreStatus(this.status);
-        newInfo.setJob(this.workingJob);
+        if(this.status == CoreStatus.CONTEXTSWITCH || this.status == CoreStatus.MIGRATION)
+        {
+            newInfo.setJob(this.costQueue.peek().getRequestJob());
+        }
+        else
+        {
+            newInfo.setJob(this.workingJob);
+        }
         newInfo.setStartTime(this.currentTime);
         newInfo.setUseSpeed(this.getParentCoreSet().getCurrentSpeed(),this.getParentCoreSet().getNormalizationOfSpeed());
-
+        
         this.schedulingInfoSet.add(newInfo);
         this.previousSchedulingInfo = newInfo;
         this.isChangeSpeed = false;
     }
     
     /*SetValue*/
+    public void setWorkingJob(Job j)
+    {
+        if(j != null && this.workingJob != null && this.workingJob.getStatus() == JobStatus.COMPUTING)//符合這個情況 代表進入了搶先
+        {
+            println("C"+this.ID+" ,j"+j.getParentTask().getID()+",CurrentProiority() = "+j.getCurrentProiority().getValue());
+            println("Preemption");
+            println("C"+this.ID+" ,j"+this.workingJob.getParentTask().getID()+",CurrentProiority() = "+this.workingJob.getCurrentProiority().getValue());
+            this.parentProcessor.getController().jobPreemptedAction(workingJob, j);
+        }
+        
+        this.workingJob = j;
+    }
+    
     public void setID(int id)
     {
         this.ID = id;
     }
-    
 
     public void setParentCoreSet(CoreSet coreSet)
     {
@@ -545,23 +669,65 @@ public class Core
         this.status = c;
     }
     
-    public void addContextSwitchCost(long cost)
+    public void setContextSwitchCost(Core requestCore, Job requestJob)
     {
         this.contactSwitchCount += 1;
-        if(cost>0)
+        if(this.parentProcessor.getParentSimulator().getContextSwitchTime() > 0)
         {
-            contactSwitchCost += cost;
-            this.status = CoreStatus.CONTEXTSWITCH;
+            Cost cost = new Cost(this, requestCore, requestJob, CoreStatus.CONTEXTSWITCH);
+            this.costQueue.add(cost);
+        }
+        else
+        {
+            this.setWorkingJob(requestJob);
         }
     }
     
-    public void addMigrationCost(long cost)
-    {
-        this.migrationCount +=1;
-        if(cost>0)
+    public void setMigrationCost(Core requestCore, Job requestJob)//ex:Core1 Migrate to Core2 , 這時一定是由Core1可以 '進行 Migration(Core的CostQueue內無Cost)' 的狀態下 
+    {                                                              //才會在 Core1 and Core2 內產生 Migration cost;
+        
+        Cost contextSwitchCost = null;
+        Cost migrationCost = null;
+        
+        this.contactSwitchCount += 1;
+        if(this.parentProcessor.getParentSimulator().getContextSwitchTime() >0)//在Migration之前一定會觸發ContextSwitch
         {
-            this.migrationCost += cost;
-            this.status = CoreStatus.MIGRATION;
+            contextSwitchCost = new Cost(this, requestCore, requestJob, CoreStatus.CONTEXTSWITCH);
+            this.costQueue.add(contextSwitchCost);
+        }
+        
+        this.migrationCount +=1;
+        if(this.parentProcessor.getParentSimulator().getMigrationTime() > 0)
+        {
+            migrationCost = new Cost(this, requestCore, requestJob, CoreStatus.MIGRATION);
+            this.costQueue.add(migrationCost);
+        }
+        
+        if(contextSwitchCost != null)
+        {
+            if(migrationCost != null)
+            {
+                contextSwitchCost.setNextCost(migrationCost);
+            }
+            else
+            {
+                migrationCost = new Cost(this, requestCore, requestJob, CoreStatus.MIGRATION);
+                migrationCost.setCostTime(0);
+                contextSwitchCost.setNextCost(migrationCost);
+            }
+        }
+        else if(contextSwitchCost == null && migrationCost == null && this == requestCore)
+        {
+            requestCore.getLocalReadyQueue().add(requestJob);
+            requestJob.setCurrentCore(requestCore);
+        }
+    }
+    
+    public void setbeBlockedTimeOfJobByLocalQueue()
+    {
+        if(this.status == CoreStatus.EXECUTION || this.status == CoreStatus.WAIT)
+        {  
+            this.localReadyQueue.setBlockingTime(this.workingJob);
         }
     }
     
@@ -628,18 +794,7 @@ public class Core
     
     public long getPowerConsumption()
     {
-        //return Double.parseDouble(df.format(this.powerConsumption));
         return this.powerConsumption;
-    }
-    
-    public long getContextSwitchCost()
-    {
-        return this.contactSwitchCost;
-    }
-    
-    public long getMigrationCost()
-    {
-        return this.migrationCost;
     }
     
     public int getContextSwitchCount()
@@ -650,6 +805,11 @@ public class Core
     public long getMigrationCount()
     {
         return this.migrationCount;
+    }
+    
+    public Queue<Cost> getCostQueue()
+    {
+        return this.costQueue;
     }
     
 }

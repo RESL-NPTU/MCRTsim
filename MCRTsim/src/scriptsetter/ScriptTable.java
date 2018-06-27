@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -149,12 +150,12 @@ public class ScriptTable extends JPanel
             }
         }
         
-        System.out.println("!!!!!!!!!!");
+        println("!!!!!!!!!!");
         for(Script s : this.scriptSet)
         {
-            System.out.println(s.getID());
+            println(s.getID());
         }
-        System.out.println("!!!!!!!!!!");
+        println("!!!!!!!!!!");
         
     }
     

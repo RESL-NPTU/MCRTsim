@@ -6,11 +6,12 @@
 package concurrencyControlProtocol.implementation;
 
 import SystemEnvironment.Processor;
+import WorkLoad.CriticalSection;
 import WorkLoad.Job;
 import WorkLoad.Priority;
 import WorkLoad.SharedResource;
 import WorkLoad.Task;
-import concurrencyControlProtocol.ConcurrencyControlProtocol;
+import WorkLoadSet.TaskSet;
 import java.util.Stack;
 import java.util.Vector;
 import mcrtsim.Definition;
@@ -19,15 +20,17 @@ import mcrtsim.Definition;
  *
  * @author ShiuJia
  */
-public class SRP extends ConcurrencyControlProtocol
+public class SRP extends PIP
 {
-    public Vector<Priority> preemptionLevelForJob = new Vector<Priority>();
+    public Vector<Priority> preemptionLevelForTask = new Vector<Priority>();
     public Vector<Priority> preemptionLevelForRes = new Vector<Priority>();
     public Priority preemptionLevelSystem = Definition.Ohm;
     public Job levelJob = null;
     public SharedResource levelRes = null;
     
     public Stack<SharedResource> lockResource = new Stack<SharedResource>();
+    
+    public Vector<Long> blockingTimeForTask = new Vector<Long>();
     
     public SRP()
     {
@@ -37,10 +40,11 @@ public class SRP extends ConcurrencyControlProtocol
     @Override
     public void preAction(Processor p)
     {
+        super.preAction(p);
         for(Task t : p.getTaskSet())
         {
-            this.preemptionLevelForJob.add(new Priority(t.getPeriod()));
-            //System.out.println("SRP:Job" + t.getID() + ":" + this.preemptionLevelForJob.get(t.getID() - 1).getValue());
+            this.preemptionLevelForTask.add(new Priority(t.getPeriod()));
+            //println("SRP:Job" + t.getID() + ":" + this.preemptionLevelForJob.get(t.getID() - 1).getValue());
         }
         
         for(SharedResource r : p.getSharedResourceSet())
@@ -48,55 +52,55 @@ public class SRP extends ConcurrencyControlProtocol
             Priority tempPriority = Definition.Ohm;
             for(Task t : r.getAccessTaskSet())
             {
-                if(this.preemptionLevelForJob.get(t.getID() - 1).isHigher(tempPriority))
+                if(this.preemptionLevelForTask.get(t.getID() - 1).isHigher(tempPriority))
                 {
-                    tempPriority = this.preemptionLevelForJob.get(t.getID() - 1);
+                    tempPriority = this.preemptionLevelForTask.get(t.getID() - 1);
                 }
             }
             this.preemptionLevelForRes.add(tempPriority);
             
-            //System.out.println("SRP:Res" + r.getID() + ":" + this.preemptionLevelForRes.get(r.getID() - 1).getValue());
+            //println("SRP:Res" + r.getID() + ":" + this.preemptionLevelForRes.get(r.getID() - 1).getValue());
         }
+        
+        this.setBlockingTime(p.getTaskSet());
     }
 
     @Override
     public void jobArrivesAction(Job j)
     {
-        if(!this.preemptionLevelForJob.get(j.getParentTask().getID() - 1).isHigher(preemptionLevelSystem))
-        {
-            this.getParentController().checkBlockedAction(j, levelRes);
-        }
-        else
-        {
-            if(j.getCriticalSectionSet().size() > 0)
-            {
-                for(int i = 0; i < j.getCriticalSectionArray().size(); i++)
-                {
-                    if(j.getCriticalSectionArray().get(i).getUseSharedResource().getIdleResourceNum() <= 0)
-                    {
-                        if(!j.getCriticalSectionArray().get(i).getUseSharedResource().isGlobal())
-                        {
-                            this.getParentController().checkBlockedAction(j, j.getCriticalSectionArray().get(i).getUseSharedResource());
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    @Override
-    public  void jobPreemptedAction(Job preemptedJob , Job newJob)
-    {
-    }
-
-    @Override
-    public void jobExecuteAction(Job j)
-    {
         
     }
 
     @Override
-    public SharedResource jobLockAction(Job j, SharedResource r)
+    public boolean checkJobFirstExecuteAction(Job j)//已加入global resource判斷
+    {
+        if(!this.preemptionLevelForTask.get(j.getParentTask().getID() - 1).isHigher(preemptionLevelSystem))
+        {
+            this.getParentController().checkBlockedAction(j, levelRes);
+            return false;
+        }
+        else
+        {
+            if(j.getNotEnteredCriticalSectionSet().size() > 0)
+            {
+                for(int i = 0; i < j.getNotEnteredCriticalSectionArray().size(); i++)
+                {
+                    if(j.getNotEnteredCriticalSectionArray().get(i).getUseSharedResource().getIdleResourceNum() <= 0)
+                    {
+                        if(!j.getNotEnteredCriticalSectionArray().get(i).getUseSharedResource().isGlobal())
+                        {
+                            this.getParentController().checkBlockedAction(j, j.getNotEnteredCriticalSectionArray().get(i).getUseSharedResource());
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    
+    @Override
+    public SharedResource checkJobLockAction(Job j, SharedResource r)
     {
         j.lockSharedResource(r);
         this.lockResource.add(r);
@@ -112,12 +116,7 @@ public class SRP extends ConcurrencyControlProtocol
     @Override
     public void jobUnlockAction(Job j, SharedResource r)
     {
-        if(r.getWaitQueue().size() > 0)
-        {
-            j.endInheritance();
-        }
-        j.unLockSharedResource(r);
-        //j.setCurrentProiority(j.getOriginalPriority());
+        super.jobUnlockAction(j, r);
         for(int i = 0; i < this.lockResource.size(); i++)
         {
             if(this.lockResource.get(i).getID() == r.getID())
@@ -127,17 +126,22 @@ public class SRP extends ConcurrencyControlProtocol
         }
         this.lockResource.remove(r);
         this.preemptionLevelSystem = Definition.Ohm;
+        
         this.levelJob = null;
         this.levelRes = null;
         for(int i = 0; i < this.lockResource.size(); i++)
         {
-            if(this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1).isHigher(this.preemptionLevelSystem))
+            if(!this.lockResource.get(i).isGlobal())
             {
-                this.preemptionLevelSystem = this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1);
-                this.levelRes = this.lockResource.get(i);
-                this.levelJob = this.lockResource.get(i).getWhoLockedLastResource(j); 
+                if(this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1).isHigher(this.preemptionLevelSystem))
+                {
+                    this.preemptionLevelSystem = this.preemptionLevelForRes.get(this.lockResource.get(i).getID() - 1);
+                    this.levelRes = this.lockResource.get(i);
+                    this.levelJob = this.lockResource.get(i).getWhoLockedLastResource(j);
+                }
             }
         }
+        
     }
 
     @Override
@@ -147,21 +151,42 @@ public class SRP extends ConcurrencyControlProtocol
     }
 
     @Override
-    public void jobDeadlineAction(Job j)
+    public void jobMissDeadlineAction(Job j)
     {
-
+        super.jobMissDeadlineAction(j);
     }
 
     @Override
     public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
     {
-        //System.out.println("SRP= " + blockedJob.getParentTask().getID() + ":" + blockingRes.getID());
-        Job blockingJob = blockingRes.getWhoLockedLastResource(blockedJob);
-        if(blockingJob == null)
+        super.jobBlockedAction(blockedJob, blockingRes);
+    }
+    
+    
+    public long getBlockingTime(Task t) 
+    {   
+        return this.blockingTimeForTask.get(t.getID()-1);
+    }
+    
+    private void setBlockingTime(TaskSet ts) 
+    {   
+        for(Task t : ts)
         {
-            blockingJob = blockingRes.getResource(0).whoLocked();
+            long maxBlockingTime = 0;
+            for(Task task : ts)
+            {
+                if(t != task && this.preemptionLevelForTask.get(t.getID()-1).isHigher(this.preemptionLevelForTask.get(task.getID()-1)))
+                {
+                    for(CriticalSection cs : task.getCriticalSectionSet())
+                    {
+                        if(this.preemptionLevelForRes.get(cs.getUseSharedResource().getID()-1).compare(this.preemptionLevelForTask.get(t.getID()-1)) >= 0)
+                        {
+                            maxBlockingTime = cs.getRelativeEndTime() - cs.getRelativeStartTime() > maxBlockingTime ? cs.getRelativeEndTime() - cs.getRelativeStartTime() : maxBlockingTime;
+                        }
+                    }
+                }
+            }
+            this.blockingTimeForTask.add(maxBlockingTime);
         }
-        blockingJob.inheritBlockedJobPriority(blockedJob);
-        blockingRes.blockedJob(blockedJob);
     }
 }

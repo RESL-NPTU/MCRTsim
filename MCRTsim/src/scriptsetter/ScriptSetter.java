@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package scriptsetter;
+import static mcrtsim.MCRTsim.println;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -12,6 +13,10 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -65,7 +70,7 @@ public class ScriptSetter extends JFrame
                     }
                     
                     
-                    System.out.println("A"+tableTabbedPane.getComponentCount());
+                    println("A"+tableTabbedPane.getComponentCount());
                 }
 
                 @Override
@@ -78,7 +83,7 @@ public class ScriptSetter extends JFrame
                         ((ScriptTable)tableTabbedPane.getComponent(i)).setGroupID(Integer.toString(i+1));
                     }
                     
-                    System.out.println("B"+tableTabbedPane.getComponentCount());
+                    println("B"+tableTabbedPane.getComponentCount());
                 }
                 
             }
@@ -88,8 +93,8 @@ public class ScriptSetter extends JFrame
     private void init() 
     {
         this.setTitle("Script Setter");
-        this.setBounds(100, 100, 800, 500);
-        this.setMinimumSize(new Dimension(600, 280));
+        this.setBounds(100, 100, 800, 585);
+        this.setMinimumSize(new Dimension(800, 585));
         this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         this.setVisible(false);
         this.setLayout(new BorderLayout()); 
@@ -151,6 +156,24 @@ public class ScriptSetter extends JFrame
         return this.sciptToolBar;
     }
     
+    public String getAccuracy()
+    {
+        return this.scriptPanel.getAccuracy();
+    }
+    
+    public int getThreadAmount()
+    {
+        if(this.scriptPanel.getThreadAmount() != null && Integer.valueOf(this.scriptPanel.getThreadAmount()) > 0)
+        {
+            System.out.println("ThreadAmount = "+ Integer.valueOf(this.scriptPanel.getThreadAmount()));
+            return Integer.valueOf(this.scriptPanel.getThreadAmount());
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    
     public void addGroup()
     {
         this.tableTabbedPane.addTab(Integer.toString(this.tableTabbedPane.getComponentCount()+1), new ScriptTable(this));
@@ -198,23 +221,43 @@ public class ScriptSetter extends JFrame
             fileDialog.setVisible(true);
             if(fileDialog.getFile() != null)//如果取消存檔則fileDialog.getFile()會是null
             {
+                this.parent.setMagnificationFactor(this.getAccuracy());
+                ExecutorService executor = Executors.newFixedThreadPool(this.getThreadAmount()); 
+        
                 for(int i = 0 ; i<this.tableTabbedPane.getComponentCount() ; i++)
                 {
                     ScriptTable st = (ScriptTable)this.tableTabbedPane.getComponent(i);
                     for(Script s : st.getScriptSet())
                     {
                         s.removeAllScriptResult();
-                        this.parent.startScript(s);
+                        Vector<String> workloadFileNames = this.parent.getFolderFile(s.getWorkloadSite());
+                        
+                        for(String workloadFileName : workloadFileNames)
+                        {
+                            executor.execute(new ScriptRunnable(this, s, workloadFileName));
+                        }
                     }
                 }
+                
+                executor.shutdown();
+                try  
+                {  
+                    // awaitTermination返回false即超时会继续循环，返回true即线程池中的线程执行完成主线程跳出循环往下执行，每隔10秒循环一次  
+                    while (!executor.awaitTermination(10, TimeUnit.SECONDS));  
+                }  
+                catch (InterruptedException e)  
+                {  
+                    e.printStackTrace();  
+                }
+                
                 
                 for(int i = 0 ; i<this.tableTabbedPane.getComponentCount() ; i++)
                 {
                     ScriptTable st = (ScriptTable)this.tableTabbedPane.getComponent(i);
-                    System.out.println("GroupID :"+st.getGroupID());
+                    println("GroupID :"+st.getGroupID());
                     for(Script s : st.getScriptSet())
                     {
-                        System.out.println(", ScriptID :"+s.getID() + ", ScriptResultSize :"+ s.getScriptResultSet().size());
+                        println(", ScriptID :"+s.getID() + ", ScriptResultSize :"+ s.getScriptResultSet().size());
                     }
                 }
                 

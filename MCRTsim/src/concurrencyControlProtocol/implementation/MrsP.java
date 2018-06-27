@@ -17,6 +17,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Vector;
 import mcrtsim.Definition;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -27,6 +28,12 @@ public class MrsP extends ConcurrencyControlProtocol
     public MrsP()
     {
         this.setName("Multiprocessor Resource Sharing Protocol");
+    }
+
+    @Override
+    public boolean checkJobFirstExecuteAction(Job j) 
+    {
+        return true;
     }
     
     class ResourceLocalCeiling extends Vector<Dictionary<Core, Priority>>
@@ -94,7 +101,7 @@ public class MrsP extends ConcurrencyControlProtocol
     
     
     ResourceLocalCeiling resourceLocalCeiling ;
-    public ResourceFIFOJobQueue resourceFIFOJobQueue;
+    ResourceFIFOJobQueue resourceFIFOJobQueue;
     
     @Override
     public void preAction(Processor p) 
@@ -110,40 +117,64 @@ public class MrsP extends ConcurrencyControlProtocol
     }
     
     @Override
-    public  void jobPreemptedAction(Job preemptedJob , Job newJob)
+    public  void jobPreemptedAction(Job preemptedJob , Job nextJob)//進入此函式就代表，呼叫此函式的Core當前的CostQueue內沒有Cost
     {
         if(preemptedJob.getCurrentCore() != preemptedJob.getOriginCore())
         {
-            preemptedJob.migration(preemptedJob.getOriginCore());
+            preemptedJob.migrateTo(preemptedJob.getOriginCore());
             if(preemptedJob.getEnteredCriticalSectionSet().size()>0)
             {
                 SharedResource r = preemptedJob.getEnteredCriticalSectionSet().get(0).getUseSharedResource();
-                preemptedJob.inheritPriority(this.resourceLocalCeiling.getPriority(r, preemptedJob.getCurrentCore()));
+                preemptedJob.raisePriority(this.resourceLocalCeiling.getPriority(r, preemptedJob.getCurrentCore()),0);//這時的preemptedJob.getCurrentCore() == preemptedJob.getOriginCore();
             }
         }
     }
 
     @Override
-    public void jobExecuteAction(Job j) 
+    public void jobFirstExecuteAction(Job j) 
     {
         
     }
 
     @Override
-    public SharedResource jobLockAction(Job j, SharedResource r) 
+    public SharedResource checkJobLockAction(Job j, SharedResource r) 
     {
         this.resourceFIFOJobQueue.addJob(r, j);
         Job firstJob = this.resourceFIFOJobQueue.getFirstJob(r);
         if(r.getIdleResourceNum() > 0 && this.resourceFIFOJobQueue.getFirstJob(r).equals(j))
         {
             j.lockSharedResource(r);
-            j.inheritPriority(this.resourceLocalCeiling.getPriority(r, j.getCurrentCore()));
+            if(this.resourceLocalCeiling.getPriority(r, j.getCurrentCore()).isHigher(j.getCurrentProiority()))
+            {
+                j.raisePriority(this.resourceLocalCeiling.getPriority(r, j.getCurrentCore()),0);
+            }
         }
-        else if(!j.getCurrentCore().equals(firstJob.getCurrentCore()) && firstJob.getCurrentCore().getWorkingJob() != firstJob)//
+        else if(!j.getCurrentCore().equals(firstJob.getCurrentCore()) && firstJob.getCurrentCore().getLocalReadyQueue().peek() != firstJob)//
         {
-            firstJob.migration(j.getCurrentCore());
-            Priority p = new Priority(this.resourceLocalCeiling.getPriority(r, j.getCurrentCore()).getValue()-1);//繼承其他Core的resourceCeiling +1 
-            firstJob.inheritPriority(p);
+            if(firstJob.migrateTo(j.getCurrentCore()))
+            {   
+                firstJob.raisePriority(this.resourceLocalCeiling.getPriority(r, j.getCurrentCore()), 1);//拉高其他Core的resourceCeiling +1 
+                
+                if(firstJob == firstJob.getCurrentCore().getLocalReadyQueue().peek())
+                {
+                    println("firstJob == firstJob.getCurrentCore().getLocalReadyQueue().peek()");
+                }
+                else
+                {
+                    println("firstJob != firstJob.getCurrentCore().getLocalReadyQueue().peek()");
+                }
+                
+                println("Proiority:"+(-firstJob.getCurrentProiority().getValue())+","+(-firstJob.getCurrentCore().getLocalReadyQueue().peek().getCurrentProiority().getValue()));
+                if(firstJob.getCurrentProiority().isHigher(firstJob.getCurrentCore().getLocalReadyQueue().peek().getCurrentProiority()))
+                {
+                    println("OOOOOOOOOH!!!!");
+                }
+                
+            }
+            else
+            {
+                j.getCurrentCore().setCoreStatus(Definition.CoreStatus.WAIT);
+            }
             return r;
         }
         else
@@ -151,8 +182,6 @@ public class MrsP extends ConcurrencyControlProtocol
             j.getCurrentCore().setCoreStatus(Definition.CoreStatus.WAIT);
             return r;
         }
-
-        //需要實做Job 轉移 Core 之方法
         
         return null;
     }
@@ -171,10 +200,29 @@ public class MrsP extends ConcurrencyControlProtocol
         
         if(!j.getCurrentCore().equals(j.getParentTask().getLocalCore()))
         {
-            j.migration(j.getOriginCore());
+            j.migrateTo(j.getOriginCore());
         }
         
-        j.endInheritance();
+        /*找出尚未解鎖的資源中最高的resourcePriorityCeiling*/
+        Priority resourcePriorityCeiling = Definition.Ohm;
+        for(int i = 0 ; i<j.getEnteredCriticalSectionArray().size() ; i++)
+        {
+            SharedResource sr = j.getEnteredCriticalSectionArray().get(i).getUseSharedResource();
+            if(this.resourceLocalCeiling.getPriority(sr, j.getOriginCore()).isHigher(resourcePriorityCeiling))
+            {
+                resourcePriorityCeiling = this.resourceLocalCeiling.getPriority(sr, j.getOriginCore());
+            }
+        }
+        
+        if(resourcePriorityCeiling.isHigher(j.getOriginalPriority()))
+        {
+            j.raisePriority(resourcePriorityCeiling, 0);
+        }
+        else
+        {
+            j.setCurrentProiority(j.getOriginalPriority());
+        }
+        
     }
 
     @Override
@@ -184,14 +232,13 @@ public class MrsP extends ConcurrencyControlProtocol
     }
 
     @Override
-    public void jobDeadlineAction(Job j) 
+    public void jobMissDeadlineAction(Job j) 
     {
-        //最後再補完
-        while(j.getEnteredCriticalSectionSet().size() > 0)
+        SharedResource blockingResource = j.getBlockingResource();
+        
+        if(blockingResource != null)
         {
-            SharedResource r = j.getEnteredCriticalSectionSet().peek().getUseSharedResource();
-            j.unLockSharedResource(r);
-            this.resourceFIFOJobQueue.removeJob(r, j);
+            this.resourceFIFOJobQueue.removeJob(blockingResource, j);
         }
     }
     

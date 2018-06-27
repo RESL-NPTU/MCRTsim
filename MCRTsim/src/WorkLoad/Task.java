@@ -8,11 +8,20 @@ package WorkLoad;
 import SystemEnvironment.Core;
 import WorkLoadSet.CriticalSectionSet;
 import WorkLoadSet.TaskSet;
+import java.util.PriorityQueue;
 import java.util.Vector;
+import mcrtsim.Definition.JobStatus;
+import static mcrtsim.Definition.magnificationFactor;
+import mcrtsim.MCRTsimMath;
+import static mcrtsim.MCRTsim.println;
+
 /**
  *
  * @author ShiuJia
  */
+
+
+
 public class Task
 {
     private int ID; //代碼
@@ -23,14 +32,17 @@ public class Task
     private long computationAmount; //所需工作量
     private Priority priority; //使用於靜態優先權分配所需屬性
     private Core localCore; //使用於Partitioned Scheduling分配Core
-    private CriticalSectionSet criticalSectionSet; //執行過程中的CriticalSection
+    private CriticalSectionSet criticalSectionSet; //執行過程中所需的CriticalSection
+    private long totalCriticalSectionTime;//整體的CriticalSectionTime
     private TaskSet parentTaskSet; //所屬工作集合
     private Job curJob;
     private int jobMissDeadlineCount = 0;
     private int jobCompletedCount = 0;
-    private Vector<Job> JobSet;
+    private Vector<Job> jobSet;
     
-    private Vector<SharedResource> resourceSet;
+    private Vector<SharedResource> sharedResourceSet;
+    
+    private Vector<Nest> nestSet;
     
     public Task()
     {
@@ -44,16 +56,26 @@ public class Task
         this.localCore = null;
         this.criticalSectionSet = new CriticalSectionSet();
         this.parentTaskSet = null;
-        this.resourceSet = new Vector<SharedResource>();
-        this.JobSet = new Vector<>();
+        this.sharedResourceSet = new Vector<SharedResource>();
+        this.jobSet = new Vector<>();
         this.curJob = new Job();
+        this.nestSet = new Vector<Nest>();
     }
     
     /*Operating*/
     public void addCriticalSection(CriticalSection cs)
     {
         this.criticalSectionSet.add(cs);
-        this.resourceSet.add(cs.getUseSharedResource());
+        this.sharedResourceSet.add(cs.getUseSharedResource());
+        
+        //排序用
+        PriorityQueue<CriticalSection> PCS = new PriorityQueue<CriticalSection>();
+        PCS.addAll(this.criticalSectionSet);
+        this.criticalSectionSet.removeAllElements();
+        while(!PCS.isEmpty())
+        {
+            this.criticalSectionSet.add(PCS.poll());
+        }
     }
     
     public Job produceJob(long produceTime)
@@ -69,24 +91,24 @@ public class Task
         j.setOriginalPriority(this.priority);
         j.setCurrentProiority(this.priority);
         j.setCriticalSectionSet(this.criticalSectionSet);
-        j.setMaxProcessingSpeed(this.getParentTaskSet().getMaxProcessingSpeed());
-        this.JobSet.add(j);
-       // System.out.println("t("+ this.ID +","+ j.getID() +") :" + j.getReleaseTime() );
+        j.setMaxProcessingSpeed(this.ParentTaskSet().getProcessingSpeed());
+        this.jobSet.add(j);
+       // println("t("+ this.ID +","+ j.getID() +") :" + j.getReleaseTime() );
         return j;
     }
     
     public void showInfo()
     {
-        System.out.println("Task(" + this.ID + "):");
-        System.out.println("    EnterTime: " + this.enterTime);
-        System.out.println("    RelativeDeadline: " + this.relativeDeadline);
-        System.out.println("    ComputationAmount: " + this.computationAmount);
-        System.out.println("    CriticalSection:");
+        println("Task(" + this.ID + "):");
+        println("    EnterTime: " + this.enterTime);
+        println("    RelativeDeadline: " + this.relativeDeadline);
+        println("    ComputationAmount: " + this.computationAmount);
+        println("    CriticalSection:");
         for(CriticalSection cs : this.criticalSectionSet)
         {
-            System.out.println("        CriticalSection(R" + cs.getUseSharedResource().getID() + "):" + cs.getRelativeStartTime() + "/" + cs.getRelativeEndTime());
+            println("        CriticalSection(R" + cs.getUseSharedResource().getID() + "):" + cs.getRelativeStartTime() + "/" + cs.getRelativeEndTime());
         }
-        System.out.println();
+        println();
     }
     
     /*SetValue*/
@@ -130,6 +152,35 @@ public class Task
         this.parentTaskSet = ts;
     }
     
+    /*設定TotalCriticalSectionTime*/
+    public void setTotalCriticalSectionTime()
+    {
+        CriticalSection criticalSection = null;
+        for(CriticalSection cs : this.criticalSectionSet)
+        {
+            for(CriticalSection cs2 : this.criticalSectionSet)
+            {
+                if(cs != cs2 && cs2.getRelativeStartTime() <= cs.getRelativeStartTime() && cs.getRelativeEndTime() <= cs2.getRelativeEndTime())
+                {
+                    criticalSection = cs2;
+                    break;
+                }
+            }
+            
+            if(criticalSection == null)
+            {
+                this.totalCriticalSectionTime += cs.getExecutionTime();
+            }
+            
+            criticalSection = null;
+        }   
+    }
+    
+    public void addNest(Nest n)
+    {
+        this.nestSet.add(n);
+    }
+    
     /*GetValue*/
     public int getID()
     {
@@ -166,14 +217,14 @@ public class Task
         return this.localCore;
     }
     
-    public TaskSet getParentTaskSet()
+    public TaskSet ParentTaskSet()
     {
         return this.parentTaskSet;
     }
     
     public Vector<SharedResource> getResourceSet()
     {
-        return this.resourceSet;
+        return this.sharedResourceSet;
     }
     
     public double getUtilization()
@@ -213,12 +264,88 @@ public class Task
     
     public Vector<Job> getJobSet()
     {
-        return this.JobSet;
+        return this.jobSet;
     }
         
     public int getJobCount()
     {
         return (this.jobCompletedCount + this.jobMissDeadlineCount);
     }
+    
+    public long getTotalCriticalSectionTime()
+    {
+        return this.totalCriticalSectionTime;
+    }
+    
+    public double getAverageResponseTimeOfJob()
+    {
+        double time = 0;
+        
+        for(Job j : this.jobSet)
+        {
+            if(j.getStatus() == JobStatus.COMPLETED || j.getStatus() == JobStatus.MISSDEADLINE)
+            {
+                time = MCRTsimMath.add(time, j.getResponseTime());
+            }
+        }
+        
+        if(this.getJobCount() != 0)
+        {
+            return MCRTsimMath.div(time,this.getJobCount());
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    public double getAveragePendingTimeOfJob()
+    {
+        double time = 0;
+        
+        for(Job j : this.jobSet)
+        {
+            if(j.getStatus() == JobStatus.COMPLETED || j.getStatus() == JobStatus.MISSDEADLINE)
+            {
+                time = MCRTsimMath.add(time, j.getPendingTime());
+            }
+        }
+        
+        if(this.getJobCount() != 0)
+        {
+            return MCRTsimMath.div(time,this.getJobCount());
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    public double getAverageBeBlockedTimeRatioOfJob()
+    {
+        double ratio = 0;
+        for(Job j : this.jobSet)
+        {
+            if(j.getStatus() == JobStatus.COMPLETED || j.getStatus() == JobStatus.MISSDEADLINE)
+            {
+                ratio = MCRTsimMath.add(ratio,j.getBeBlockedTimeRatio());
+            }
+        }
+        
+        if(this.getJobCount() != 0)
+        {
+            return MCRTsimMath.div(ratio,this.getJobCount());
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    public Vector<Nest> getNestSet()
+    {
+        return this.nestSet;
+    }
+    
     
 }

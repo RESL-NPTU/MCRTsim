@@ -7,16 +7,19 @@ package dynamicVoltageAndFrequencyScalingMethod.implementation;
 
 import SystemEnvironment.Core;
 import SystemEnvironment.Processor;
+import WorkLoad.CoreSpeed;
 import WorkLoad.CriticalSection;
 import WorkLoad.Job;
 import WorkLoad.Priority;
 import WorkLoad.SharedResource;
 import WorkLoad.Task;
+import WorkLoadSet.CoreSpeedSet;
 import WorkLoadSet.TaskSet;
 import concurrencyControlProtocol.implementation.MSRP;
 import dynamicVoltageAndFrequencyScalingMethod.DynamicVoltageAndFrequencyScalingMethod;
 import java.util.Vector;
-
+import mcrtsim.Definition;
+import mcrtsim.Definition.DVFSType;
 
 /**
  *
@@ -24,6 +27,8 @@ import java.util.Vector;
  */
 public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
 {
+
+    
     public class RemoteBlocking
     {
         Job blockedJob;
@@ -49,14 +54,16 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
     
     public DUAL()
     {
-        this.setName("DUAL");
+        this.setName("Dual Speed");
+        //thesis name = Energy-Efficient Task Scheduling and Synchronization for Multicore Real-Time Systems
+        //此方法為多核心的速度節能方法但此方法有BUG(論文本身的BUG)
     }
     
     @Override
     public void definedSpeed(Processor p)
     {
         preemptionLevelRes = ((MSRP)p.getController().getConcurrencyControlProtocol()).preemptionLevelForRes;
-        preemptionLevelJob = ((MSRP)p.getController().getConcurrencyControlProtocol()).preemptionLevelForJob;
+        preemptionLevelJob = ((MSRP)p.getController().getConcurrencyControlProtocol()).preemptionLevelForTask;
         
         for(int i = 0; i < p.getTaskSet().size(); i++)
         {
@@ -67,29 +74,28 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
             this.acSpin.add(0.0);
         }
         
-            for(Core c : p.getAllCore())
+        
+
+        for(Core c : p.getAllCore())
+        {
+            this.acBlock.add(0.0);
+            double tempU = 0;
+            for(Task t : p.getTaskSet())
             {
-                this.acBlock.add(0.0);
-                double tempU = 0;
-                for(Task t : p.getTaskSet())
+                if(t.getLocalCore() == c)
                 {
-                    if(t.getLocalCore() == c)
+                    double tempWU = this.worstCaseUtilization(t, p.getTaskSet());
+                    if(tempU < tempWU)
                     {
-                        double tempWU = this.worstCaseUtilization(t, p.getTaskSet());
-                        if(tempU < tempWU)
-                        {
-                            tempU = tempWU;
-                        }
-                        //System.out.println("Task=" + t.getID() + ":" + (((double)(t.getComputationAmount() + this.spin(t.getLocalCore(), t)) / t.getPeriod()) + ((double)this.block(t) / t.getPeriod())));
-                        //System.out.println("  spin^k_j =" + this.spin(t.getLocalCore(), t));
-                        //System.out.println("  block_j  =" + this.block(t));
+                        tempU = tempWU;
                     }
                 }
-                //System.out.println("DUAL : Core U =" + tempU);
-                //System.out.println("DUAL = " + c.getID() + "  DFS =" + tempU);
-               // this.baseSpeedSet.add(this.utilizationToSpeed(c.getParentCoreSet().getCoreSpeedSet(), tempU));
-                c.setCurrentSpeed(tempU * tempU * c.getParentProcessor().getTaskSet().getMaxProcessingSpeed());
             }
+            
+            c.setCurrentSpeed(tempU * c.getParentProcessor().getTaskSet().getProcessingSpeed());
+        
+        }
+        
     }
 
     @Override
@@ -113,7 +119,6 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
     @Override
     public void coreExecuteAction(Core c)
     {
-        
     }
 
     @Override
@@ -149,9 +154,9 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
                     }
                 }
             }
-                    Core c = j.getCurrentCore();
-                    c.setCurrentSpeed(tempU * c.getParentProcessor().getTaskSet().getMaxProcessingSpeed());
-
+            
+            j.getCurrentCore().setCurrentSpeed(tempU * j.getCurrentCore().getParentProcessor().getTaskSet().getProcessingSpeed());
+        
         }
     }
 
@@ -172,12 +177,6 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
 
     @Override
     public void jobCompleteAction(Job j)
-    {
-        
-    }
-
-    @Override
-    public void jobDeadlineAction(Job j)
     {
         
     }
@@ -293,6 +292,7 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
                                 {
                                     csTime = spinTime;
                                 }
+                                //System.out.println("  Global=" + csTime/100000);
                             }
                             //計算B^l_i
                             else
@@ -304,6 +304,7 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
                                         csTime = c.getRelativeEndTime() - c.getRelativeStartTime();
                                     }
                                 }
+                                //System.out.println("  Local=" + csTime/100000);
                             }
                         }
                     }
@@ -390,7 +391,6 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
 
         
         double tempU = 0;
-
         
         TaskSet ts = this.getParentRegulator().getParentProcessor().getTaskSet();
         for(Task t : ts)
@@ -406,14 +406,22 @@ public class DUAL extends DynamicVoltageAndFrequencyScalingMethod
             }
         }
         
-
-        Core c = j.getCurrentCore();
-        c.setCurrentSpeed(tempU * c.getParentProcessor().getTaskSet().getMaxProcessingSpeed());
+        j.getCurrentCore().setCurrentSpeed(tempU * j.getCurrentCore().getParentProcessor().getTaskSet().getProcessingSpeed());
     }
 
     @Override
     public void jobEveryExecuteAction(Job j)
     {
 
+    }
+    
+    @Override
+    public void checkEndSystemTimeAction(long systemTime) 
+    {
+    }
+
+    @Override
+    public void jobMissDeadlineAction(Job j) 
+    {
     }
 }

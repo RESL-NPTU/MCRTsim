@@ -11,6 +11,7 @@ import WorkLoad.SharedResource;
 import WorkLoad.Task;
 import WorkLoadSet.TaskSet;
 import java.util.Vector;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -53,9 +54,9 @@ public class SBP extends PartitionAlgorithm
             u +=  ((double)t.getComputationAmount() / t.getPeriod());
         }
         
-        System.out.println("U = " + u);
+        println("U = " + u);
         u = u / (cores.size());
-        System.out.println("U*= " + u);
+        println("U*= " + u);
         
         for(int i = 0; i < taskSet.size() - 1; i++)
         {
@@ -77,7 +78,7 @@ public class SBP extends PartitionAlgorithm
             {
                 if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(0)))
                 {
-                    //System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
+                    //println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
                     if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
                     {
                         this.similarityForTemp.add(this.similarityForAllTask.get(x));
@@ -89,7 +90,7 @@ public class SBP extends PartitionAlgorithm
             {
                 if(this.similarityForAllTask.get(x).similarityTask.contains(maxSim.similarityTask.get(1)))
                 {
-                    //System.out.println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
+                    //println("SBP= X*(" + this.similarityForAllTask.get(x).similarityTask.get(0).getID() + ", " + this.similarityForAllTask.get(x).similarityTask.get(1).getID() + ")");
                     if(!this.similarityForTemp.contains(this.similarityForAllTask.get(x)))
                     {
                         this.similarityForTemp.add(this.similarityForAllTask.get(x));
@@ -97,20 +98,20 @@ public class SBP extends PartitionAlgorithm
                 }
             }
 
-//            System.out.println("START===============================");
+//            println("START===============================");
             for(Task t :maxSim.similarityTask)
             {
                 if(allTs.contains(t))
                 {
-                    //System.out.println("SBP= Core(" + i + 1 + ") <= T(" + t.getID() + ")");
+                    //println("SBP= Core(" + i + 1 + ") <= T(" + t.getID() + ")");
                     //t.setLocalCore(cores.get(i));
                     cores.get(i).addTask(t);
                     tempU[i] += (double)t.getComputationAmount() / t.getPeriod();
                     allTs.remove(t);
-                    //System.out.println("SBP= U(" + i + 1 + ") = " + tempU);
+                    //println("SBP= U(" + i + 1 + ") = " + tempU);
                 }
             }
-//            System.out.println("E N D===============================");
+//            println("E N D===============================");
             
             
             if(this.similarityForTemp.isEmpty())
@@ -168,25 +169,25 @@ public class SBP extends PartitionAlgorithm
         
         this.similarityForAllTask.add(sim);
         
-//        System.out.println("====================");
-//        System.out.println("Task" + t1.getID());
+//        println("====================");
+//        println("Task" + t1.getID());
 //        for(SharedResource r : t1.getResourceSet())
 //        {
-//            System.out.println("  Resource" + r.getID());
+//            println("  Resource" + r.getID());
 //        }
 //        
-//        System.out.println("Task" + t2.getID());
+//        println("Task" + t2.getID());
 //        for(SharedResource r : t2.getResourceSet())
 //        {
-//            System.out.println("  Resource" + r.getID());
+//            println("  Resource" + r.getID());
 //        }
 //        
-//        System.out.println("Task" + t1.getID() + ":" + t2.getID());
+//        println("Task" + t1.getID() + ":" + t2.getID());
 //        for(SharedResource r : sr)
 //        {
-//            System.out.println("  Resource" + r.getID());
+//            println("  Resource" + r.getID());
 //        }
-//        System.out.println("====================");
+//        println("====================");
         
         return sr;
     }

@@ -23,23 +23,35 @@ public class MCRTsim {
     /**
      * @param args the command line arguments
      */
+    
+    static boolean println = false;
+    
+    public static void print(String s)
+    {
+        if(println)
+        {
+            System.out.print(""+s);
+        }
+    }
+    
+    public static void println()
+    {
+        if(println)
+        {
+            System.out.println();
+        }
+    }
+    
+    public static void println(String s)
+    {
+        if(println)
+        {
+            System.out.println(""+s);
+        }
+    }
+    
     public static void main(String[] args) 
     {
-        System.out.println("" + MCRTsim.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        //IDE : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/build/classes/
-        //jar : /Users/YC/Documents/LabResearch/MCRTsim/MCRTsimV2/MCRTsim/dist/MCRTsim2.0.jar
-        
-        System.out.println("" + System.getProperties().getProperty("user.dir"));
-        
-//        InputStream is = MCRTsim.class.getClass().getResourceAsStream("/AlgorithmName/test");
-//        
-//        try {
-//            String fileContent = IOUtils.toString(is, "UTF-8");
-//            System.out.println(fileContent);
-//        } catch (IOException ex) {
-//            Logger.getLogger(MCRTsim.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        
         UserInterface ui = new UserInterface();
     }
 }

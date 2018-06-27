@@ -38,7 +38,8 @@ public abstract class DynamicVoltageAndFrequencyScalingMethod
     public abstract void jobLockAction(Job j, SharedResource r);
     public abstract void jobUnlockAction(Job j, SharedResource r);
     public abstract void jobCompleteAction(Job j);
-    public abstract void jobDeadlineAction(Job j);
+    public abstract void checkEndSystemTimeAction(long systemTime);
+    public abstract void jobMissDeadlineAction(Job j);
     public abstract void jobBlockedAction(Job blockedJob, SharedResource blockingRes);
     
     /*SetValue*/

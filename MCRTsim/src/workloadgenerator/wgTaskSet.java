@@ -42,10 +42,19 @@ public class wgTaskSet extends Vector<wgTask>
         return this.get(i);
     }
     
+    public double getTotalCriticalSectionRatio()
+    {
+        double actualCSR = 0;
+        for(wgTask t : this)
+        {
+            actualCSR = wgMath.add(actualCSR, t.getCriticalSectionRatio());
+        }
+        return wgMath.div(actualCSR, this.size());
+    }
+    
     public double getTotalUtilization()
     {
-        DecimalFormat df = new DecimalFormat("##.000");
-        return Double.parseDouble(df.format(this.totalUtilization));
+        return this.totalUtilization;
     }
     
 }

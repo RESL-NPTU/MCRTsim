@@ -10,16 +10,16 @@ import WorkLoad.Job;
 import WorkLoad.Priority;
 import WorkLoad.SharedResource;
 import WorkLoad.Task;
-import concurrencyControlProtocol.ConcurrencyControlProtocol;
 import java.util.Stack;
 import java.util.Vector;
 import mcrtsim.Definition;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
  * @author ShiuJia
  */
-public class PCP extends ConcurrencyControlProtocol
+public class PCP extends PIP
 {
     Vector<Priority> ceilingRes = new Vector<Priority>();
     Priority ceilingSystem = Definition.Ohm;
@@ -35,6 +35,7 @@ public class PCP extends ConcurrencyControlProtocol
     @Override
     public void preAction(Processor p)
     {
+        super.preAction(p);
         for(int i = 0; i < p.getSharedResourceSet().size(); i++)
         {
             this.ceilingRes.add(Definition.Ohm);
@@ -49,30 +50,12 @@ public class PCP extends ConcurrencyControlProtocol
         
         for(int i = 0; i < this.ceilingRes.size(); i++)
         {
-            System.out.println("Res" + (i+1) + ":" + this.ceilingRes.get(i).getValue());
+            println("Res" + (i+1) + ":" + this.ceilingRes.get(i).getValue());
         }
     }
 
     @Override
-    public void jobArrivesAction(Job j)
-    {
-        
-    }
-
-    @Override
-    public  void jobPreemptedAction(Job preemptedJob , Job newJob)
-    {
-        
-    }
-    
-    @Override
-    public void jobExecuteAction(Job j)
-    {
-        
-    }
-
-    @Override
-    public SharedResource jobLockAction(Job j, SharedResource r)
+    public SharedResource checkJobLockAction(Job j, SharedResource r)
     {
         if(r.getLeftResourceAmount() > 0)
         {
@@ -117,11 +100,8 @@ public class PCP extends ConcurrencyControlProtocol
     @Override
     public void jobUnlockAction(Job j, SharedResource r)
     {
-        if(r.getWaitQueue().size() > 0)
-        {
-            j.endInheritance();
-        }
-        j.unLockSharedResource(r);
+        super.jobUnlockAction(j, r);
+
         this.lockResource.pop();
         this.ceilingSystem = Definition.Ohm;
         this.ceilingJob = null;
@@ -138,26 +118,8 @@ public class PCP extends ConcurrencyControlProtocol
     }
 
     @Override
-    public void jobCompletedAction(Job j)
-    {       
-        
-    }
-
-    @Override
-    public void jobDeadlineAction(Job j)
-    {
-        
-    }
-
-    @Override
     public void jobBlockedAction(Job blockedJob, SharedResource blockingRes)
     {
-        Job blockingJob = blockingRes.getWhoLockedLastResource(blockedJob);
-        if(blockingJob == null)
-        {
-            blockingJob = blockingRes.getResource(0).whoLocked();
-        }
-        blockingJob.inheritBlockedJobPriority(blockedJob);
-        blockingRes.blockedJob(blockedJob);
+        super.jobBlockedAction(blockedJob, blockingRes);
     }
 }

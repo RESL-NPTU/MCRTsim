@@ -7,13 +7,11 @@ package SystemEnvironment;
 
 import ResultSet.MissDeadlineInfo;
 import ResultSet.ResultSet;
-import ResultSet.SchedulingInfo;
 import WorkLoadSet.DataSetting;
-import WorkLoadSet.SharedResourceSet;
-import WorkLoadSet.TaskSet;
-import mcrtsim.Definition;
-import mcrtsim.Definition.PriorityType;
+import mcrtsim.Definition.SchedulingType;
 import userInterface.frontEnd.SimulationViewer;
+
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -21,7 +19,7 @@ import userInterface.frontEnd.SimulationViewer;
  */
 public class Simulator
 {
-    public SimulationViewer parentSimuationViewer;
+//    public SimulationViewer parentSimuationViewer;
     private Processor processor;
     //private TaskSet taskSet;
     //private SharedResourceSet sharedResourceSet;
@@ -31,9 +29,10 @@ public class Simulator
     private long migrationTime = 0;
     private ResultSet resultSet;
     
-    public Simulator(SimulationViewer sv)
+//    public Simulator(SimulationViewer sv)
+    public Simulator()
     {
-        this.parentSimuationViewer = sv;
+//        this.parentSimuationViewer = sv;
         this.processor = null;
         //this.taskSet = null;
         //this.sharedResourceSet = null;
@@ -67,6 +66,10 @@ public class Simulator
     
     public void start()
     {
+        long time1,time2;
+        time1 = System.currentTimeMillis();
+        println(("Start"));
+        
         this.processor.partitionTasks();
         
         this.processor.schedulerCalculatePriorityForFixed();
@@ -76,24 +79,36 @@ public class Simulator
         
         //DVSAction
         this.processor.getDynamicVoltageRegulator().definedSpeed();
+        
         while(this.elapsedTime < this.simulationTime)
         {
-            this.processor.execute(1);
+            if(this.processor.getSchedulingAlgorithm().getSchedulingType()== SchedulingType.Global)
+            {
+                this.processor.globalExecute(1);
+            }
+            else
+            {
+                this.processor.execute(1);
+            }
             this.elapsedTime += 1;
         }
         
         for(Core c : this.processor.getAllCore())//finalRecording
         {
-            //System.out.println("Sim= " + this.simulationTime);
+            //println("Sim= " + this.simulationTime);
             c.getSchedulingInfoSet().get(c.getSchedulingInfoSet().size() - 1).setEndTime(this.simulationTime);
             c.finalRecording();
             this.resultSet.addCoreInfo(c);
             
-            System.out.println("PowerConsumption(" + c.getID() + ")= " + c.getPowerConsumption());
+            println("PowerConsumption(" + c.getID() + ")= " + c.getPowerConsumption());
         }
-        System.out.println("MissDeadline= " + this.resultSet.getMissDeadlineInfoSet().size());
+        println("MissDeadline= " + this.resultSet.getMissDeadlineInfoSet().size());
         
-        System.out.println("End");
+        println("End");
+        
+        
+        time2 = System.currentTimeMillis();
+        System.out.println(("！！！！ Spend：" + (double)(time2-time1)/1000 + " second. ！！！！"));
     }
     
     /*SetValue*/

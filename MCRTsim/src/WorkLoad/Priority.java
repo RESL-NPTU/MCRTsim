@@ -44,4 +44,21 @@ public class Priority
             return false;
         }
     }
+    
+    public int compare(Priority p)
+    {
+        if(this.getValue() > p.getValue())
+        {
+            return 1;
+        }
+        else if(this.getValue() < p.getValue())
+        {
+            return -1;
+        }
+        else 
+        {
+            return 0;
+        }
+    }
+    
 }

@@ -43,7 +43,12 @@ public class XMLWriter
             Element workloadElement = doc.createElement(w.getWorkloadHeader());
 
             doc.appendChild(workloadElement);
-//            workloadElement.setAttribute(w.getUtilizationHeader(), String.valueOf(w.getUtilization()));
+            workloadElement.setAttribute(w.getMaximumUtilizationHeader(), String.valueOf(w.getMaximumUtilization()));
+            workloadElement.setAttribute(w.getActualUtilizationHeader(), String.valueOf(w.getActualUtilization()));
+            
+            workloadElement.setAttribute(w.getMaximumCriticalSectionRatioHeader(), String.valueOf(w.getMaxCriticalSectionRatio()));
+            workloadElement.setAttribute(w.getActualCriticalSectionRatioHeader(), String.valueOf(w.getActualCriticalSectionRatio()));
+            
             workloadElement.setAttribute(w.getTaskNumberHeader(), String.valueOf(w.getTaskNumber()));
             workloadElement.setAttribute(w.getResourcesNumberHeader(), String.valueOf(w.getResourcesNumber()));
             workloadElement.setAttribute(w.getFrequencyHeader(), String.valueOf(w.getFrequency()));
@@ -55,10 +60,6 @@ public class XMLWriter
                 Element resourcesElement = doc.createElement(r.getResourcesHeader());
                 resourcesElement.setAttribute(r.getIDHeader(),String.valueOf(r.getID()));
                 resourcesElement.setAttribute(r.getResourceAmountHeader(),String.valueOf(r.getResourceAmount()));
-//                Element resourceAmount = doc.createElement(r.getResourceAmountHeader());
-//                resourceAmount.appendChild(doc.createTextNode(String.valueOf(r.getResourceAmount())));
-
-//                resourcesElement.appendChild(resourceAmount);
                workloadElement.appendChild(resourcesElement);
             }
 

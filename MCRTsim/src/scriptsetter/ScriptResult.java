@@ -6,6 +6,7 @@
 package scriptsetter;
 
 import java.util.Vector;
+import static mcrtsim.MCRTsim.println;
 
 /**
  *
@@ -21,8 +22,13 @@ public class ScriptResult
     private int taskCount;
     private int totalJobCompeletedCount;
     private int totalJobMissDeadlineCount;
-    private double totalPendingTime;
-    private double totalResponseTime;
+    private double completedRatio;
+    private double deadlineMissRatio;
+            
+    private double averagePendingTime;
+    private double averageResponseTime;
+    private double beBlockedTimeRatio;
+    private double maximumCriticalSectionRatio,actualCriticalSectionRatio,maximumUtilization,actualUtilization;
             
     public ScriptResult(Script s)
     {
@@ -32,9 +38,12 @@ public class ScriptResult
         this.powerConsumptions = new Vector<>();
         this.totalJobCompeletedCount = 0;
         this.totalJobMissDeadlineCount = 0;
-        this.totalPendingTime = 0;
-        this.totalResponseTime = 0;
+        this.completedRatio=0;
+        this.deadlineMissRatio=0;
+        this.averagePendingTime = 0;
+        this.averageResponseTime = 0;
     }
+    
     
     public void setWorkloadFile(String str)
     {
@@ -49,6 +58,27 @@ public class ScriptResult
     public void setSchedulable(boolean b)
     {
         this.isSchedulable = b;
+    }
+    
+    
+    public void setMaximumCriticalSectionRatio(double ratio)
+    {
+        this.maximumCriticalSectionRatio = ratio;
+    }
+    
+    public void setActualCriticalSectionRatio(double ratio)
+    {
+        this.actualCriticalSectionRatio = ratio;
+    }
+    
+    public void setMaximumUtilization(double U)
+    {
+        this.maximumUtilization = U;
+    }
+    
+    public void setActualUtilization(double U)
+    {
+        this.actualUtilization = U;
     }
     
     public void addPowerConsumption(double p)
@@ -75,14 +105,49 @@ public class ScriptResult
         }
     }
     
-    public void setTotalPendingTime(double d)
+    public void setCompletedRatio(double i)
     {
-        this.totalPendingTime = d;
+        this.completedRatio = i;
     }
     
-    public void setTotalResponseTime(double d)
+    public void setDeadlineMissRatio(double i)
     {
-        this.totalResponseTime = d;
+        this.deadlineMissRatio = i;
+    }
+    
+    public void setAveragePendingTime(double d)
+    {
+        this.averagePendingTime = d;
+    }
+    
+    public void setAverageResponseTime(double d)
+    {
+        this.averageResponseTime = d;
+    }
+    
+    public void setBeBlockedTimeRatio(double d)
+    {
+        this.beBlockedTimeRatio = d;
+    }
+    
+    public double getMaximumCriticalSectionRatio()
+    {
+        return this.maximumCriticalSectionRatio;
+    }
+    
+    public double getActualCriticalSectionRatio()
+    {
+        return this.actualCriticalSectionRatio;
+    }
+    
+    public double getMaximumUtilization()
+    {
+        return this.maximumUtilization;
+    }
+    
+    public double getActualUtilization()
+    {
+        return this.actualUtilization;
     }
     
     public String getWorkloadFile()
@@ -125,38 +190,43 @@ public class ScriptResult
         return this.totalJobMissDeadlineCount;
     }
     
-    public double getTotalPendingTime()
+    public double getCompletedRatio()
     {
-        return this.totalPendingTime;
+        return this.completedRatio;
     }
     
-    public double getTotalResponseTime()
+    public double getDeadlineMissRatio()
     {
-        return this.totalResponseTime;
+        return this.deadlineMissRatio;
     }
     
-    public String outputResult()
+    public double getAveragePendingTime()
     {
-        String str = ""+this.workloadFile;
-        for(int i = 0 ; i < this.powerConsumptions.size();i++)
-        {
-            str+=" "+this.powerConsumptions.get(i);
-        }
-        
-        return str;
+        return this.averagePendingTime;
     }
+    
+    public double getAverageResponseTime()
+    {
+        return this.averageResponseTime;
+    }
+    
+    public double getBeBlockedTimeRatio()
+    {
+        return this.beBlockedTimeRatio;
+    }
+    
     
     public void showInfo()
     {
-        //System.out.println("!!");
-        System.out.println(this.parent.parent.getGroupID()+" - "+this.parent.getID()+" - "+this.ID);
-        System.out.println("  WorkloadFile : "+this.workloadFile+".xml");
-        System.out.println("  ProcessorFile : "+this.processorFile+".xml");
+        //println("!!");
+        println(this.parent.parent.getGroupID()+" - "+this.parent.getID()+" - "+this.ID);
+        println("  WorkloadFile : "+this.workloadFile+".xml");
+        println("  ProcessorFile : "+this.processorFile+".xml");
         
         for(int i = 0 ; i < this.powerConsumptions.size();i++)
         {
-            //System.out.println("    Core("+(i+1)+") : "+this.powerConsumptions.get(i));
-            System.out.println(""+this.powerConsumptions.get(i));
+            //println("    Core("+(i+1)+") : "+this.powerConsumptions.get(i));
+            println(""+this.powerConsumptions.get(i));
         }
     }
 }

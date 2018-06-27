@@ -7,6 +7,7 @@ package WorkLoadSet;
 
 import WorkLoad.Job;
 import java.util.PriorityQueue;
+import java.util.Vector;
 
 /**
  *
@@ -29,5 +30,36 @@ public class JobQueue extends PriorityQueue<Job>
         this.addAll(newQ);
     }
     
+    public void setBlockingTime(Job blockingJob)
+    {
+        if(!this.isEmpty())
+        {
+            Object[] jobs = this.toArray();
+            for(int i = 0 ; i<jobs.length ; i++)
+            {
+                if(blockingJob != ((Job)jobs[i]))
+                {
+                    if(((Job)jobs[i]).getOriginalPriority().compare(blockingJob.getOriginalPriority()) == 1)
+                    {
+                        ((Job)jobs[i]).setBeBlockedTime(1);
+                    }
+                    else 
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
     
+    @Override
+    public Job peek() 
+    {
+        Job j = super.peek();
+        if(j==null || j.isSuspended)
+        {
+            return null;
+        }
+        return j;
+    }
 }

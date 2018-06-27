@@ -20,7 +20,7 @@ public class WFD extends PartitionAlgorithm
 {
     public WFD()
     {
-        this.setName("Worst Fit Decreasing");
+        this.setName("Worst-Fit Decreasing");
     }
     
     @Override

@@ -5,6 +5,7 @@
  */
 package mcrtsim;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import static mcrtsim.Definition.magnificationFormat;
 
@@ -36,5 +37,39 @@ public class MCRTsimMath
     {
         DecimalFormat df = new DecimalFormat(magnificationFormat);
         return Double.parseDouble(df.format(d));
+    }
+    
+    public double changeDecimalFormatFor5(double d)
+    {
+        DecimalFormat df = new DecimalFormat("##.00000");
+        return Double.parseDouble(df.format(d));
+    }
+    
+    public static double add(double value1,double value2)
+    {
+        BigDecimal b1 = new BigDecimal(Double.toString(value1));
+        BigDecimal b2 = new BigDecimal(Double.toString(value2));
+        return b1.add(b2).doubleValue();
+    }
+    
+    public static double sub(double value1,double value2)
+    {
+        BigDecimal b1 = new BigDecimal(Double.toString(value1));
+        BigDecimal b2 = new BigDecimal(Double.toString(value2));
+        return b1.subtract(b2).doubleValue();
+    }
+    
+    public static double mul(double value1,double value2)
+    {
+        BigDecimal b1 = new BigDecimal(Double.toString(value1));
+        BigDecimal b2 = new BigDecimal(Double.toString(value2));
+        return b1.multiply(b2).doubleValue();
+    }
+    
+    public static double div(double value1,double value2) 
+    {
+        BigDecimal b1 = new BigDecimal(Double.toString(value1));
+        BigDecimal b2 = new BigDecimal(Double.toString(value2));
+        return b1.divide(b2,10,BigDecimal.ROUND_HALF_UP).doubleValue();    
     }
 }

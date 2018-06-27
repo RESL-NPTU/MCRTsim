@@ -9,7 +9,6 @@ import SystemEnvironment.Processor;
 import WorkLoad.CriticalSection;
 import WorkLoad.Job;
 import WorkLoad.Priority;
-import WorkLoad.SharedResource;
 import WorkLoad.Task;
 import java.util.Vector;
 import mcrtsim.Definition;
@@ -28,6 +27,7 @@ public class DPCP extends PCP
     @Override
     public void preAction(Processor p)
     {
+        SQS = new SuspensionQueueSet(p.getSharedResourceSet());
         //DPCP 設定Resource的初始值方法如下：
         //挑出使用特定Resource的所有Task中最緊急的Deadline，設定給此Resource
         for(int i = 0; i < p.getSharedResourceSet().size(); i++)
@@ -56,9 +56,9 @@ public class DPCP extends PCP
         Vector<Long> curDeadlineSet = new Vector<>();
         
         CriticalSection criticalSection = null;
-        for(int i=0;i<j.getCriticalSectionSet().size();i++)//設定下一輪的Resources Ceiling
+        for(int i=0;i<j.getNotEnteredCriticalSectionSet().size();i++)//設定下一輪的Resources Ceiling
         {
-            criticalSection = j.getCriticalSectionSet().poll();
+            criticalSection = j.getNotEnteredCriticalSectionSet().poll();
         
             for(int k=0;k<criticalSection.getUseSharedResource().getAccessTaskSet().size();k++) //該Resource的所有Tasks
             {

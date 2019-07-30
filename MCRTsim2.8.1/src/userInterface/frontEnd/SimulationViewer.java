@@ -449,6 +449,8 @@ public class SimulationViewer extends JPanel
         
         JLabel accuracyLabel = new JLabel("Accuracy:");
         this.accuracyField = new JTextField();
+        accuracyField.setText("3"); // default accuracy is 3
+        // It should be read from configuration file
         
         costToolBar.setLayout(new GridBagLayout());
         {

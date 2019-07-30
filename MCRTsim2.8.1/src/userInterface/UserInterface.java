@@ -34,13 +34,14 @@ public class UserInterface
     
     private void initialize()
     {
-        this.frame = new JFrame("MCRTsim v2.8");
+        this.frame = new JFrame("MCRTsim v2.8.1");
         this.frame.setBounds(100, 100, 1000, 600);
         this.frame.setMinimumSize(new Dimension(1000, 600));
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         splitPane = new JSplitPane();
         this.frame.getContentPane().add(splitPane);
-        splitPane.setOrientation(1);
+        //splitPane.setOrientation(1);
+        splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setContinuousLayout(false);
         simView = new SimulationViewer(this);
         splitPane.setTopComponent(simView);
@@ -48,7 +49,8 @@ public class UserInterface
         
         result = new InfoWin(this);
         bottomSplitPane = new JSplitPane();
-        bottomSplitPane.setOrientation(1);
+        //bottomSplitPane.setOrientation(1);
+        bottomSplitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
         bottomSplitPane.setContinuousLayout(false);
        
         
